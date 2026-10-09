@@ -56,9 +56,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-primary/5 p-1.5 rounded-lg border border-primary/10">
-              <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="w-9 h-9 object-contain" />
+              <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="w-10 h-10 object-contain" />
             </div>
-            <span className="font-bold text-2xl tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">MARGVEDHA</span>
           </div>
           <button 
             onClick={handleLogin}
