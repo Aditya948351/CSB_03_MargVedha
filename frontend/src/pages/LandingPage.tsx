@@ -55,7 +55,7 @@ export default function LandingPage() {
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="h-10 w-auto object-contain" />
+            <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="h-14 w-auto object-contain" />
           </div>
           <button 
             onClick={handleLogin}
@@ -152,11 +152,11 @@ export default function LandingPage() {
               {/* Fake Terminal Footer */}
               <div className="mt-12">
                 <button 
-                  onClick={handleLogin}
-                  className="bg-primary/20 hover:bg-primary/30 text-primary-foreground border border-primary/30 px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                  onClick={() => document.getElementById('competitors')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-primary/20 hover:bg-primary/30 text-primary-foreground border border-primary/30 px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Bot className="w-5 h-5" />
-                  Start Challenge
+                  View the Gap
                 </button>
               </div>
             </div>
@@ -195,6 +195,54 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* The Gap: Competitors Section */}
+        <div id="competitors" className="mt-32 pt-16 border-t border-slate-200">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-bold tracking-wide text-xs mb-4">
+              THE INDUSTRY GAP
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">Beyond Traditional SCA Tools</h2>
+            <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              While established tools like <strong>Snyk, GitHub Dependabot, OSV-Scanner, and OWASP Dependency-Track</strong> are excellent at <em>detecting</em> vulnerabilities, they output flat lists that leave developers guessing. MARGVEDHA doesn't replace these tools—it evolves the workflow to focus on <strong>explainability and remediation impact</strong>.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white border border-red-100 p-8 rounded-3xl shadow-lg relative">
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Explainable Propagation</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Traditional tools tell you a package is vulnerable. We show you the <strong>complete dependency chain</strong> from your root application down to the vulnerable node, distinguishing between direct includes and structural transitive paths.
+              </p>
+            </div>
+            <div className="bg-white border border-emerald-100 p-8 rounded-3xl shadow-lg relative">
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Remediation Simulation</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Before risking a breaking change, developers can use MARGVEDHA to simulate a package upgrade. Preview exactly how a fix will alter the dependency graph and verify it resolves the vulnerability <em>before</em> creating a PR.
+              </p>
+            </div>
+            <div className="bg-white border border-blue-100 p-8 rounded-3xl shadow-lg relative">
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Cross-Project Impact</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Instead of fixing the same CVE repository by repository, we identify shared vulnerable dependencies across your entire enterprise portfolio, allowing you to prioritize high-impact global patches.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-16 bg-slate-50 border border-slate-200 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div>
+              <h4 className="font-bold text-slate-900 mb-2">Powered by Industry Standards</h4>
+              <p className="text-sm text-slate-600 max-w-xl">
+                We leverage authoritative data sources like <strong>OSV.dev</strong> for advisories, <strong>CISA KEV</strong> for wild-exploitation intelligence, and <strong>EPSS</strong> for probability metrics, combining them into our custom <strong>NetworkX</strong> propagation engine.
+              </p>
+            </div>
+            <div className="flex gap-4 shrink-0 opacity-60">
+              {/* Dummy logos for data sources */}
+              <div className="font-bold text-lg font-mono">OSV.dev</div>
+              <div className="font-bold text-lg font-mono">CISA</div>
+            </div>
+          </div>
+        </div>
+
         {/* Why GitHub & ZIP Section */}
         <div className="mt-32">
           <div className="text-center mb-16">
@@ -226,17 +274,51 @@ export default function LandingPage() {
         </div>
 
         {/* Pricing Notice */}
-        <div className="mt-32 bg-slate-900 text-white rounded-3xl p-12 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-slate-900 to-slate-900"></div>
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-            <h2 className="text-3xl font-bold">Simple, Transparent Pricing</h2>
-            <p className="text-slate-300 text-lg">
-              Every user gets exactly <strong>10 free repository scans</strong> to test the power of MARGVEDHA. 
-              After your quota is reached, enterprise-grade deep scanning is available for ₹500 per repository.
-            </p>
-            <button onClick={handleLogin} className="mt-4 bg-white text-slate-900 hover:bg-slate-100 px-8 py-3 rounded-full font-semibold transition-colors">
-              Get Started for Free
-            </button>
+        <div className="mt-32 mb-16">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Transparent Pricing</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Start instantly. Scale when you need enterprise power.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Tier */}
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-xl shadow-slate-200/50 flex flex-col">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Developer Free</h3>
+              <div className="flex items-baseline gap-2 mb-6">
+                <span className="text-4xl font-extrabold text-slate-900">₹0</span>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                <li className="flex items-center gap-3 text-slate-600"><div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></div> <strong>10 Free Repository Scans</strong></li>
+                <li className="flex items-center gap-3 text-slate-600"><div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></div> Full Vulnerability Graphing</li>
+                <li className="flex items-center gap-3 text-slate-600"><div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></div> Basic AI Remediation</li>
+              </ul>
+              <button onClick={handleLogin} className="w-full bg-primary/10 hover:bg-primary/20 text-primary font-semibold py-3 rounded-xl transition-colors">
+                Start Free Trial
+              </button>
+            </div>
+
+            {/* Enterprise Tier */}
+            <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden flex flex-col border border-slate-800 transform md:-translate-y-4">
+              <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-lg">RECOMMENDED</div>
+              <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary via-slate-900 to-slate-900"></div>
+              
+              <div className="relative z-10 flex flex-col flex-1">
+                <h3 className="text-2xl font-bold mb-2">Enterprise Pro</h3>
+                <div className="flex items-baseline gap-2 mb-6">
+                  <span className="text-4xl font-extrabold">₹500</span>
+                  <span className="text-slate-400">/ scan</span>
+                </div>
+                <ul className="space-y-4 mb-8 flex-1">
+                  <li className="flex items-center gap-3 text-slate-300"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div> <strong>Unlimited Quota</strong></li>
+                  <li className="flex items-center gap-3 text-slate-300"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div> Cross-Project Impact Analysis</li>
+                  <li className="flex items-center gap-3 text-slate-300"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div> Advanced AI Patch Generation</li>
+                  <li className="flex items-center gap-3 text-slate-300"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></div> One-Click PR Automation</li>
+                </ul>
+                <button onClick={handleLogin} className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg shadow-primary/25">
+                  Upgrade to Pro
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
