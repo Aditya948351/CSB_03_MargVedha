@@ -216,7 +216,7 @@ export default function LandingPage() {
                   <div className="text-slate-900 font-bold text-lg mb-2">Drag & Drop ZIP Archive</div>
                   <div className="text-slate-500 text-sm">or paste a GitHub Repository URL</div>
                   <div className="mt-6 w-full max-w-xs h-10 bg-white rounded-lg border border-slate-200 flex items-center px-4">
-                    <span className="text-slate-400 text-sm">https://github.com/org/repo</span>
+                    <span className="text-slate-900 text-sm font-medium">https://github.com/org/repo</span>
                   </div>
                 </div>
               </div>
