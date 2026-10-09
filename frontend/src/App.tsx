@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import ProjectImport from './pages/ProjectImport';
 import GraphExplorer from './pages/GraphExplorer';
@@ -13,8 +14,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="import" element={<ProjectImport />} />
           <Route path="graph" element={<GraphExplorer />} />

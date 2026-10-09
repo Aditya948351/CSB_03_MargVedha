@@ -1,7 +1,5 @@
 {
   "projects": {
     "default": "margvedha-2026-cisa"
-  },
-  "targets": {},
-  "etags": {}
+  }
 }

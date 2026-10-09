@@ -25,7 +25,7 @@ const navItems = [
 import { useAppStore } from '../../store';
 
 export default function Sidebar() {
-  const isDemoMode = useAppStore(state => state.isDemoMode);
+  const { isDemoMode, user, scanCount } = useAppStore();
   return (
     <aside className="w-64 bg-surface border-r border-border flex flex-col">
       <div className="h-16 flex items-center px-6 border-b border-border">
@@ -55,13 +55,37 @@ export default function Sidebar() {
       </div>
 
       <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-surface-hover/50 border border-border">
-          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          <div className="flex flex-col">
-            <span className="text-xs font-medium text-text">System Status</span>
-            <span className="text-[10px] text-text-muted">{isDemoMode ? 'Demo Mode Active' : 'Live Data Active'}</span>
+        {user ? (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-8 h-8 rounded-full" />
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-sm font-semibold truncate text-slate-900">{user.displayName || user.email}</span>
+                <span className="text-[10px] text-text-muted">Pro Plan Active</span>
+              </div>
+            </div>
+            <div className="px-3 pb-2">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-medium text-slate-600">Free Scans</span>
+                <span className="font-bold text-primary">{Math.max(0, 10 - scanCount)}/10</span>
+              </div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5">
+                <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min(100, (scanCount / 10) * 100)}%` }}></div>
+              </div>
+              {scanCount >= 10 && (
+                <p className="text-[10px] text-red-500 mt-1 font-semibold leading-tight">Limit reached. ₹500/scan required.</p>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3 px-3 py-2 rounded-md bg-surface-hover/50 border border-border">
+            <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-text">System Status</span>
+              <span className="text-[10px] text-text-muted">{isDemoMode ? 'Demo Mode Active' : 'Live Data Active'}</span>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );

@@ -144,19 +144,21 @@ export default function Remediation() {
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-semibold">AI Assistant (Hugging Face)</h4>
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-purple-600"/> AI Assistant (Sarvam)
+                  </h4>
                   <button 
                     onClick={() => handleAskAI(selectedFinding)}
                     disabled={isAiLoading}
                     className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium text-sm transition-colors disabled:opacity-50"
                   >
-                    {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
+                    {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     Generate Patch Strategy
                   </button>
                 </div>
 
                 {aiStrategy && (
-                  <div className="p-4 bg-purple-900/20 border border-purple-500/30 rounded-lg mb-6 text-sm text-purple-100 font-mono whitespace-pre-wrap leading-relaxed shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                  <div className="p-5 bg-purple-50 border border-purple-200 rounded-lg mb-6 text-sm text-purple-900 font-mono whitespace-pre-wrap leading-relaxed shadow-inner">
                     {aiStrategy}
                   </div>
                 )}

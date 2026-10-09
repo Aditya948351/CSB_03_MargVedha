@@ -30,7 +30,7 @@ export default function ProjectImport() {
   const [stepIndex, setStepIndex] = useState(0);
   
   const navigate = useNavigate();
-  const setScanResult = useAppStore(state => state.setScanResult);
+  const { setScanResult, user, scanCount, setScanCount } = useAppStore();
 
   useEffect(() => {
     let progressInterval: number;
@@ -63,6 +63,11 @@ export default function ProjectImport() {
   }, [isAnalyzing]);
 
   const handleUpload = async () => {
+    if (scanCount >= 10) {
+      setError("Free quota reached! You have used all 10 free repository scans. Please upgrade to Pro (₹500/scan) to continue.");
+      return;
+    }
+
     setIsAnalyzing(true);
     setError('');
     
@@ -93,8 +98,17 @@ export default function ProjectImport() {
       
       // Save metadata to Firebase Firestore
       try {
-        const { saveScanResult } = await import('../firebase');
+        const { saveScanResult, db } = await import('../firebase');
+        const { doc, updateDoc, increment } = await import('firebase/firestore');
         await saveScanResult(scanResult);
+
+        if (user) {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            scanCount: increment(1)
+          });
+          setScanCount(scanCount + 1);
+        }
       } catch (err) {
         console.error("Firebase save failed:", err);
       }

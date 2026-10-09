@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "firebase/firestore";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, getDoc, setDoc, increment } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBwl9IsrwEMAsVGyyte9Ke422pvCp_iEi8",
@@ -12,6 +13,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
 
 export const saveScanResult = async (scanData: any) => {
   try {
