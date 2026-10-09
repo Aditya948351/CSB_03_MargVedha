@@ -72,32 +72,96 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-6 py-20 lg:py-32">
-        <div className="text-center max-w-4xl mx-auto space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-medium text-sm mb-4 border border-blue-100">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            SaaS Security Ecosystem
+      <main className="relative max-w-7xl mx-auto px-6 py-20 lg:py-32 overflow-hidden min-h-[80vh] flex items-center">
+        {/* Animated Background Waves */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-30">
+          <svg className="absolute w-full h-[150%] top-[-25%] left-0 animate-[spin_120s_linear_infinite]" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0,50 Q25,20 50,50 T100,50" fill="none" stroke="url(#gradient)" strokeWidth="0.5" />
+            <path d="M0,60 Q25,30 50,60 T100,60" fill="none" stroke="url(#gradient)" strokeWidth="0.5" />
+            <path d="M0,40 Q25,10 50,40 T100,40" fill="none" stroke="url(#gradient)" strokeWidth="0.5" />
+            <path d="M0,70 Q25,40 50,70 T100,70" fill="none" stroke="url(#gradient)" strokeWidth="0.5" />
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2DD4BF" stopOpacity="0" />
+                <stop offset="50%" stopColor="#2DD4BF" />
+                <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-16 items-center relative z-10 w-full">
+          
+          {/* Left Column - Copy & CTA */}
+          <div className="space-y-8 max-w-2xl text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold tracking-wide text-xs mb-2 border border-primary/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+              SaaS Security Ecosystem
+            </div>
+            
+            <h1 className="text-5xl lg:text-6xl font-light text-slate-800 leading-[1.1] tracking-tight">
+              Trace the Risk. <br/>
+              <span className="font-semibold bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">Secure the Path.</span>
+            </h1>
+            
+            <p className="text-xl text-slate-600 leading-relaxed font-light">
+              Involve your developers as equal partners in your AppSec program. Analyze software supply chains with DAGs, OSINT, and AI remediation before pushing to production.
+            </p>
+            
+            <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
+              <button 
+                onClick={handleLogin}
+                disabled={isLoggingIn}
+                className="w-full sm:w-auto bg-slate-800 hover:bg-slate-900 text-white px-8 py-4 rounded-full font-medium text-lg transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 group"
+              >
+                {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin" /> : "Try our Demo"}
+                {!isLoggingIn && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+              </button>
+            </div>
           </div>
-          <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 leading-[1.1]">
-            Trace the Risk.<br />
-            <span className="bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent">Secure the Path.</span>
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            MARGVEDHA is an advanced cybersecurity SaaS platform that analyzes your software supply chain using Directed Acyclic Graphs, OSINT feeds, and AI-driven remediation to stop zero-day vulnerabilities before they reach production.
-          </p>
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-              className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 group"
-            >
-              {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin" /> : "Try our Demo"}
-              {!isLoggingIn && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-            </button>
-            <p className="text-sm text-slate-500 font-medium">Free for up to 10 repository scans.</p>
+
+          {/* Right Column - Animated Card */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-emerald-400/20 rounded-[2.5rem] blur-3xl transform rotate-3 scale-105"></div>
+            <div className="relative bg-[#2D325A] rounded-3xl p-8 shadow-2xl border border-white/10 overflow-hidden min-h-[400px] flex flex-col justify-between">
+              
+              {/* Fake Terminal Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                </div>
+                <div className="text-white/40 text-xs font-mono">margvedha-scan.sh</div>
+                <div className="flex gap-2 text-white/40">
+                  <span className="w-1 h-1 rounded-full bg-white/40"></span>
+                  <span className="w-1 h-1 rounded-full bg-white/40"></span>
+                  <span className="w-1 h-1 rounded-full bg-white/40"></span>
+                </div>
+              </div>
+
+              {/* Fake Terminal Body */}
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold text-white tracking-tight">MARGVEDHA</h2>
+                <p className="text-slate-300 font-light leading-relaxed max-w-sm">
+                  This platform teaches you how to map transitive vulnerabilities across deep dependency graphs and instantly patch them via AI.
+                </p>
+              </div>
+
+              {/* Fake Terminal Footer */}
+              <div className="mt-12">
+                <button 
+                  onClick={handleLogin}
+                  className="bg-primary/20 hover:bg-primary/30 text-primary-foreground border border-primary/30 px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                >
+                  <Bot className="w-5 h-5" />
+                  Start Challenge
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
