@@ -132,6 +132,36 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Why GitHub & ZIP Section */}
+        <div className="mt-32">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Enterprise-Grade Source Control Integration</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Why does MARGVEDHA exclusively analyze GitHub repositories and local ZIP archives?</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-slate-900 text-white p-8 rounded-3xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6 opacity-20">
+                <GitBranch className="w-24 h-24" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 relative z-10">Shift-Left Security via GitHub</h3>
+              <p className="text-slate-300 leading-relaxed relative z-10">
+                We intercept vulnerabilities at the <strong>source code level</strong> before they ever reach production. GitHub is the industry standard where over 90% of modern supply chains begin. By natively scanning the repo directly, we catch zero-day flaws while the developer is still coding—dramatically reducing the cost and risk of patching a live server later.
+              </p>
+            </div>
+            
+            <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-xl shadow-slate-200/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6 opacity-5">
+                <Shield className="w-24 h-24" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-slate-900 relative z-10">Air-Gapped Enterprise ZIP Support</h3>
+              <p className="text-slate-600 leading-relaxed relative z-10">
+                Many banks, defense contractors, and high-security enterprises work in strict <strong>Air-Gapped environments</strong> (no internet access) and legally cannot host code on public Git platforms. Our local ZIP upload feature ensures they can securely analyze proprietary source code without exposing their Git history to external networks.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Pricing Notice */}
         <div className="mt-32 bg-slate-900 text-white rounded-3xl p-12 text-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary via-slate-900 to-slate-900"></div>

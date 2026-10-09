@@ -43,8 +43,8 @@ export default function History() {
             <Card key={scan.id} className="hover:border-primary/50 transition-colors">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="space-y-1">
-                  <div className="font-mono text-primary font-bold">
-                    {scan.scan_id || scan.id}
+                  <div className="font-mono text-primary font-bold truncate max-w-xs">
+                    {scan.source_name || scan.scan_id || scan.id}
                   </div>
                   <div className="text-xs text-text-muted flex items-center gap-2">
                     <Clock className="w-3 h-3" />

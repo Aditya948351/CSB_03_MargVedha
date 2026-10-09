@@ -57,12 +57,25 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border">
         {user ? (
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 px-3 py-2">
-              <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-8 h-8 rounded-full" />
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-sm font-semibold truncate text-slate-900">{user.displayName || user.email}</span>
-                <span className="text-[10px] text-text-muted">Pro Plan Active</span>
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2 overflow-hidden">
+                <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-8 h-8 rounded-full shrink-0" />
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-semibold truncate text-slate-900">{user.displayName || user.email}</span>
+                  <span className="text-[10px] text-text-muted">Pro Plan Active</span>
+                </div>
               </div>
+              <button 
+                onClick={async () => {
+                  const { auth } = await import('../../firebase');
+                  await auth.signOut();
+                  useAppStore.getState().setUser(null);
+                }}
+                className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                title="Log Out"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              </button>
             </div>
             <div className="px-3 pb-2">
               <div className="flex justify-between text-xs mb-1">

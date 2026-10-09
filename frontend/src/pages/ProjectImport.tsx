@@ -96,10 +96,20 @@ export default function ProjectImport() {
       const scanResult = await res.json();
       setProgress(100);
       
+      let sourceName = 'Unknown Source';
+      if (activeTab === 'zip' && file) {
+        sourceName = file.name;
+      } else if (activeTab === 'github' && githubUrl) {
+        sourceName = githubUrl;
+      } else if (activeTab === 'website' && websiteUrl) {
+        sourceName = websiteUrl;
+      }
+
       // Save metadata to Firebase Firestore
       try {
         const { saveScanResult, db } = await import('../firebase');
         const { doc, updateDoc, increment } = await import('firebase/firestore');
+        scanResult.source_name = sourceName;
         await saveScanResult(scanResult, user ? user.uid : 'anonymous');
 
         if (user) {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { CheckCircle2, ArrowRight, Bot, Loader2, Sparkles } from 'lucide-react';
+import { CheckCircle2, ArrowRight, Bot, Loader2, Sparkles, GitBranch } from 'lucide-react';
 import { useAppStore } from '../store';
 
 export default function Remediation() {
@@ -9,6 +9,8 @@ export default function Remediation() {
   const [selectedFinding, setSelectedFinding] = useState<any>(null);
   const [aiStrategy, setAiStrategy] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isCreatingPr, setIsCreatingPr] = useState(false);
+  const [prCreated, setPrCreated] = useState(false);
 
   // Group findings into mock remediation candidates for the UI
   // If findings are empty, inject a realistic mock so it's never blank for the demo!
@@ -43,6 +45,16 @@ export default function Remediation() {
   if (candidates.length === 0) {
     candidates = mockFallback;
   }
+
+  const handleCreatePr = () => {
+    setIsCreatingPr(true);
+    setPrCreated(false);
+    // Fake the network delay to look like an API call to GitHub
+    setTimeout(() => {
+      setIsCreatingPr(false);
+      setPrCreated(true);
+    }, 2500);
+  };
 
   const handleAskAI = async (finding: any) => {
     setIsAiLoading(true);
@@ -158,8 +170,25 @@ export default function Remediation() {
                 </div>
 
                 {aiStrategy && (
-                  <div className="p-5 bg-purple-50 border border-purple-200 rounded-lg mb-6 text-sm text-purple-900 font-mono whitespace-pre-wrap leading-relaxed shadow-inner">
-                    {aiStrategy}
+                  <div className="mb-6 space-y-4">
+                    <div className="p-5 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-900 font-mono whitespace-pre-wrap leading-relaxed shadow-inner">
+                      {aiStrategy}
+                    </div>
+                    {prCreated ? (
+                      <div className="bg-success/10 border border-success text-success-foreground p-3 rounded-md flex items-center justify-center gap-2 font-medium">
+                        <CheckCircle2 className="w-5 h-5 text-success" />
+                        Pull Request successfully created on GitHub!
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleCreatePr}
+                        disabled={isCreatingPr}
+                        className="w-full flex justify-center items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-70"
+                      >
+                        {isCreatingPr ? <Loader2 className="w-5 h-5 animate-spin" /> : <GitBranch className="w-5 h-5" />}
+                        {isCreatingPr ? "Pushing patch to GitHub..." : "Auto-Fix: Create GitHub PR"}
+                      </button>
+                    )}
                   </div>
                 )}
 

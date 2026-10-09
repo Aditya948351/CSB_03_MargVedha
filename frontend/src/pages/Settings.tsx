@@ -1,9 +1,61 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 
+import { useAppStore } from '../store';
+
 export default function Settings() {
+  const { user, scanCount } = useAppStore();
+
   return (
     <div className="space-y-6 max-w-4xl">
-      <h1 className="text-3xl font-bold tracking-tight">Settings & Data Transparency</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Settings & Account</h1>
+
+      {user && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription & Quota</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center gap-4 border-b border-border pb-6">
+              <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-16 h-16 rounded-full" />
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">{user.displayName || 'Google User'}</h3>
+                <p className="text-sm text-text-muted">{user.email}</p>
+                <div className="mt-2 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  Standard Tier
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-sm font-medium text-slate-700">
+                <span>Free Tier Usage</span>
+                <span>{scanCount} / 10 Scans Used</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-3">
+                <div 
+                  className={`h-3 rounded-full transition-all ${scanCount >= 10 ? 'bg-red-500' : 'bg-primary'}`} 
+                  style={{ width: `${Math.min(100, (scanCount / 10) * 100)}%` }}
+                ></div>
+              </div>
+              {scanCount >= 10 ? (
+                <div className="bg-red-50 text-red-700 p-4 rounded-lg mt-4 text-sm font-medium border border-red-200">
+                  You have reached your 10 free scans. Future scans will require the Pro Tier at ₹500/scan.
+                  <button className="block mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
+                    Upgrade to Pro Plan
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-blue-50 text-blue-700 p-4 rounded-lg mt-4 text-sm border border-blue-200 flex justify-between items-center">
+                  <span>You have {10 - scanCount} free scans remaining.</span>
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors">
+                    Upgrade to Pro Early
+                  </button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <Card>
         <CardHeader>

@@ -22,6 +22,7 @@ export const saveScanResult = async (scanData: any, userId: string = 'anonymous'
     const docRef = await addDoc(scansRef, {
       user_id: userId,
       scan_id: scanData.scan_id,
+      source_name: scanData.source_name || 'Unknown Source',
       uploaded_at: scanData.uploaded_at,
       project_count: scanData.projects.length,
       finding_count: scanData.findings.length,
