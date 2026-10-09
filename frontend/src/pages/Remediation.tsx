@@ -157,7 +157,7 @@ export default function Remediation() {
 
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-purple-600"/> AI Assistant (Sarvam)
+                    <Bot className="w-4 h-4 text-purple-600"/> MargVedha CyberSec Model
                   </h4>
                   <button 
                     onClick={() => handleAskAI(selectedFinding)}

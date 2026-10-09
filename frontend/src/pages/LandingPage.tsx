@@ -11,14 +11,12 @@ export default function LandingPage() {
   const { user, setUser, setScanCount } = useAppStore();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  useEffect(() => {
-    // If already logged in, skip landing page
+  const handleLogin = async () => {
     if (user) {
       navigate('/dashboard');
+      return;
     }
-  }, [user, navigate]);
-
-  const handleLogin = async () => {
+    
     setIsLoggingIn(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -50,21 +48,46 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-primary/20">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-primary/20 relative overflow-hidden">
+      {/* Massive Background Glowing Orbs similar to Sarvam */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120vw] h-[80vh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-emerald-400/10 to-transparent blur-[120px] -z-10 pointer-events-none"></div>
+      <div className="absolute top-1/3 left-[-20%] w-[70vw] h-[70vw] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
+
       {/* Navbar */}
-      <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-slate-200/50 bg-white/60 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-12">
             <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="h-14 w-auto object-contain" />
+            
+            {/* Nav Tabs */}
+            <div className="hidden md:flex items-center gap-8 font-medium text-sm text-slate-600">
+              <a href="#features" className="hover:text-primary transition-colors">Products</a>
+              <a href="#competitors" className="hover:text-primary transition-colors">Features</a>
+              <a href="#pricing" className="hover:text-primary transition-colors">Developers</a>
+              <a href="#" className="hover:text-primary transition-colors">Company</a>
+            </div>
           </div>
-          <button 
-            onClick={handleLogin}
-            disabled={isLoggingIn}
-            className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg shadow-primary/25 disabled:opacity-70 flex items-center gap-2"
-          >
-            {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-            Login
-          </button>
+
+          <div className="flex items-center gap-4">
+            {user ? (
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg flex items-center gap-2"
+              >
+                Go to Dashboard
+              </button>
+            ) : (
+              <button 
+                onClick={handleLogin}
+                disabled={isLoggingIn}
+                className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-lg shadow-primary/25 disabled:opacity-70 flex items-center gap-2"
+              >
+                {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                Login
+              </button>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -207,7 +230,7 @@ export default function LandingPage() {
               <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">3</div>
               <h3 className="text-xl font-bold mb-3 text-slate-900">Simulate & Auto-Patch</h3>
               <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
-                Preview how a package upgrade resolves the tree, generate a Sarvam AI patch strategy, and 1-click open a Pull Request directly to GitHub.
+                Preview how a package upgrade resolves the tree, generate a MargVedha CyberSec patch strategy, and 1-click open a Pull Request directly to GitHub.
               </p>
             </div>
           </div>
@@ -239,7 +262,7 @@ export default function LandingPage() {
             </div>
             <h3 className="text-xl font-bold mb-3 text-slate-900">AI Remediation</h3>
             <p className="text-slate-600 leading-relaxed">
-              Powered by Sarvam AI. Generate custom, 3-step actionable patching strategies instantly instead of parsing raw CVE logs.
+              Powered by the MargVedha CyberSec Model. Generate custom, 3-step actionable patching strategies instantly instead of parsing raw CVE logs.
             </p>
           </div>
         </div>
