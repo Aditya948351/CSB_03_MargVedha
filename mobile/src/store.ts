@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Platform } from 'react-native';
 
-const API_BASE = Platform.OS === 'android' ? 'http://10.0.2.2:8000/api/v1' : 'http://localhost:8000/api/v1';
+const API_BASE = 'https://csb-03-margvedha.onrender.com/api/v1';
 
 export interface Finding {
   id: string;
