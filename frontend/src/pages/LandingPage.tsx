@@ -4,7 +4,7 @@ import { signInWithPopup } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../firebase';
 import { useAppStore } from '../store';
-import { Shield, GitBranch, Zap, Bot, ArrowRight, Loader2 } from 'lucide-react';
+import { Shield, GitBranch, Zap, Bot, ArrowRight, Loader2, UploadCloud, Activity, Wrench } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -163,6 +163,55 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+        {/* How It Works Pitch */}
+        <div className="mt-32 mb-16">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">How MARGVEDHA Works</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">From an uploaded repository to a merged GitHub patch in 3 simple steps.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Connecting lines for desktop */}
+            <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-slate-200 -z-10 w-2/3 mx-auto"></div>
+
+            {/* Step 1 */}
+            <div className="text-center relative">
+              <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 shadow-xl shadow-slate-200/50 rounded-full flex items-center justify-center mb-6">
+                <UploadCloud className="w-10 h-10 text-blue-500" />
+              </div>
+              <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">1</div>
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Upload or Connect</h3>
+              <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
+                Paste a GitHub link or securely upload an air-gapped ZIP archive. We immediately extract manifest files and dependencies.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center relative">
+              <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 shadow-xl shadow-slate-200/50 rounded-full flex items-center justify-center mb-6">
+                <Activity className="w-10 h-10 text-emerald-500" />
+              </div>
+              <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">2</div>
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Graph Generation</h3>
+              <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
+                Our engine cross-references OSV.dev and CISA KEV to instantly render an interactive, color-coded node graph of vulnerability paths.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center relative">
+              <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 shadow-xl shadow-slate-200/50 rounded-full flex items-center justify-center mb-6">
+                <Wrench className="w-10 h-10 text-purple-500" />
+              </div>
+              <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">3</div>
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Simulate & Auto-Patch</h3>
+              <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
+                Preview how a package upgrade resolves the tree, generate a Sarvam AI patch strategy, and 1-click open a Pull Request directly to GitHub.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-8">
