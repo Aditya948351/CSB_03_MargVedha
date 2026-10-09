@@ -7,6 +7,7 @@ import Vulnerabilities from './pages/Vulnerabilities';
 import Remediation from './pages/Remediation';
 import MultiProject from './pages/MultiProject';
 import Settings from './pages/Settings';
+import History from './pages/History';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="vulnerabilities" element={<Vulnerabilities />} />
           <Route path="remediation" element={<Remediation />} />
           <Route path="multi-project" element={<MultiProject />} />
+          <Route path="history" element={<History />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>

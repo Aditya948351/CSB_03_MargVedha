@@ -1,10 +1,10 @@
-import { demoScanResult } from '../fixtures/demoData';
+import { useAppStore } from '../store';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Layers } from 'lucide-react';
 
 export default function MultiProject() {
-  const { findings, projects } = demoScanResult;
+  const { findings, projects } = useAppStore(state => state.scanResult);
   
   // Find findings that affect multiple projects
   const sharedFindings = findings.filter(f => f.affected_projects.length > 1);

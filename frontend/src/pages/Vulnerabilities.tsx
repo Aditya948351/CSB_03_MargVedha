@@ -1,7 +1,7 @@
-import { demoScanResult } from '../fixtures/demoData';
+import { useAppStore } from '../store';
 
 export default function Vulnerabilities() {
-  const { findings } = demoScanResult;
+  const { findings } = useAppStore(state => state.scanResult);
 
   return (
     <div className="space-y-6">

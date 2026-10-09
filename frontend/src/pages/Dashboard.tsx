@@ -1,22 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { demoScanResult } from '../fixtures/demoData';
+import { useAppStore } from '../store';
 import { ShieldAlert, Package, Layers, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
-  const { projects, findings, graph } = demoScanResult;
+  const { projects, findings, graph, uploaded_at } = useAppStore(state => state.scanResult);
   
-  const criticalFindings = findings.filter(f => f.severity >= 9.0);
-  const highFindings = findings.filter(f => f.severity >= 7.0 && f.severity < 9.0);
-  const fixableFindings = findings.filter(f => f.risk.fix_available);
+  const criticalFindings = findings.filter((f: any) => f.severity >= 9.0);
+  const highFindings = findings.filter((f: any) => f.severity >= 7.0 && f.severity < 9.0);
+  const fixableFindings = findings.filter((f: any) => f.risk.fix_available);
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Security Overview</h1>
-          <p className="text-text-muted mt-1">Workspace analysis completed at {new Date(demoScanResult.uploaded_at).toLocaleString()}</p>
+          <p className="text-text-muted mt-1">Workspace analysis completed at {new Date(uploaded_at).toLocaleString()}</p>
         </div>
         <Link 
           to="/import"
@@ -101,22 +102,23 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Shared Dependency Risk</CardTitle>
+            <CardTitle>Findings by Severity</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Mockup for shared dependency risks */}
-              <div className="p-4 rounded-md bg-surface-hover border-l-4 border-warning">
-                <h4 className="font-semibold mb-2">lodash@4.17.19</h4>
-                <p className="text-sm text-text-muted mb-3">
-                  This vulnerable package is shared across multiple projects. Upgrading this single dependency will significantly reduce your overall risk exposure.
-                </p>
-                <div className="flex gap-2">
-                  <Badge variant="outline">2 Projects Affected</Badge>
-                  <Badge variant="success">Fix Available: 4.17.21</Badge>
-                </div>
-              </div>
-            </div>
+          <CardContent className="flex items-center justify-center pt-6">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={[
+                { name: 'Critical', count: criticalFindings.length, fill: '#ef4444' },
+                { name: 'High', count: highFindings.length, fill: '#f59e0b' },
+                { name: 'Medium', count: findings.length - criticalFindings.length - highFindings.length, fill: '#3b82f6' }
+              ]}>
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  cursor={{fill: '#1f2937'}}
+                  contentStyle={{ backgroundColor: '#151b28', borderColor: '#2d3748', color: '#f8fafc' }}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>

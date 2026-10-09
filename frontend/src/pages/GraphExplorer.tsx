@@ -1,36 +1,38 @@
 import { useState, useMemo } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
-import { demoScanResult } from '../fixtures/demoData';
+import { useAppStore } from '../store';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 
 export default function GraphExplorer() {
-  const { graph, findings } = demoScanResult;
+  const { graph, findings } = useAppStore(state => state.scanResult);
   const [selectedNode, setSelectedNode] = useState<any>(null);
 
   const elements = useMemo(() => {
-    const nodes = graph.nodes.map(node => {
+    const nodes = graph.nodes.map((n: any) => {
+      const data = n.data || n;
       let color = '#3b82f6'; // default primary
       let shape = 'round-rectangle';
       
-      if (node.type === 'Project') {
+      if (data.type === 'project') {
         color = '#10b981'; // success
         shape = 'diamond';
-      } else if (node.type === 'Vulnerability') {
+      } else if (data.type === 'vulnerability') {
         color = '#ef4444'; // danger
         shape = 'triangle';
-      } else if (node.type === 'PackageVersion') {
+      } else if (data.type === 'package') {
         // Check if package is vulnerable
-        const isVulnerable = findings.some(f => f.package === node.name && f.version === (node as any).version);
+        const pkgName = data.label.split('@')[0];
+        const isVulnerable = findings.some(f => f.package === pkgName);
         if (isVulnerable) color = '#f59e0b'; // warning
       }
 
       return {
         data: {
-          ...node,
-          id: node.id,
-          label: node.name || (node as any).aliases?.[0] || node.id,
-          type: node.type
+          ...data,
+          id: data.id,
+          label: data.label || data.id,
+          type: data.type
         },
         style: {
           'background-color': color,
@@ -39,18 +41,21 @@ export default function GraphExplorer() {
       };
     });
 
-    const edges = graph.edges.map((edge, i) => ({
-      data: {
-        id: `e${i}`,
-        source: edge.from || (edge as any).source,
-        target: edge.to || (edge as any).target,
-        type: edge.type
-      },
-      style: {
-        'line-color': edge.type === 'HAS_VULNERABILITY' ? '#ef4444' : '#4b5563',
-        'target-arrow-color': edge.type === 'HAS_VULNERABILITY' ? '#ef4444' : '#4b5563',
-      }
-    }));
+    const edges = graph.edges.map((e: any, i: number) => {
+      const data = e.data || e;
+      return {
+        data: {
+          id: data.id || `e${i}`,
+          source: data.source || data.from,
+          target: data.target || data.to,
+          type: data.type
+        },
+        style: {
+          'line-color': data.type === 'vulnerability' ? '#ef4444' : '#94a3b8',
+          'target-arrow-color': data.type === 'vulnerability' ? '#ef4444' : '#94a3b8',
+        }
+      };
+    });
 
     return [...nodes, ...edges];
   }, [graph, findings]);
@@ -60,7 +65,7 @@ export default function GraphExplorer() {
       selector: 'node',
       style: {
         'label': 'data(label)',
-        'color': '#f8fafc',
+        'color': '#0f172a',
         'font-size': '12px',
         'text-valign': 'bottom',
         'text-margin-y': '5px',
@@ -91,7 +96,12 @@ export default function GraphExplorer() {
             elements={elements}
             stylesheet={cyStylesheet as any}
             style={{ width: '100%', height: '100%' }}
-            layout={{ name: 'breadthfirst', directed: true, spacingFactor: 1.5 }}
+            layout={{ 
+              name: 'cose', 
+              padding: 50,
+              nodeRepulsion: 400000,
+              idealEdgeLength: 100
+            }}
             cy={(cy) => {
               cy.on('tap', 'node', (evt) => {
                 setSelectedNode(evt.target.data());
