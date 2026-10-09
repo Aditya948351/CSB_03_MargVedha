@@ -244,18 +244,43 @@ export default function LandingPage() {
                   Our engine cross-references OSV.dev and CISA KEV to instantly render an interactive, color-coded node graph. Visually trace exactly how a CVE propagates from a transitive sub-dependency up to your root project.
                 </p>
               </div>
-              <div className="bg-[#0f172a] p-8 rounded-3xl border border-slate-700 shadow-2xl shadow-emerald-500/10 relative overflow-hidden h-[300px] flex items-center justify-center">
+              <div className="bg-[#0f172a] p-6 rounded-3xl border border-slate-700 shadow-2xl shadow-emerald-500/20 relative overflow-hidden h-[350px] flex flex-col">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent"></div>
+                
+                {/* Legend */}
+                <div className="relative z-20 flex gap-4 text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2 border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-emerald-500"></div> Root (Safe)</div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-slate-600"></div> Transitive</div>
+                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div> Vulnerable</div>
+                </div>
+
                 {/* Fake Graph Nodes */}
-                <div className="relative w-full h-full">
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 px-4 py-2 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-400 text-xs font-mono text-center z-10">Root Project</div>
-                  <div className="absolute top-24 left-1/4 w-28 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-300 text-xs font-mono text-center z-10">lodash</div>
-                  <div className="absolute top-24 right-1/4 w-28 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-300 text-xs font-mono text-center z-10">react</div>
-                  <div className="absolute bottom-12 left-1/3 w-32 px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-xs font-mono text-center z-10 shadow-[0_0_15px_rgba(239,68,68,0.3)]">CVE-2023-XXXX</div>
-                  {/* Fake Lines */}
-                  <div className="absolute top-12 left-[35%] w-[1px] h-14 bg-slate-600 origin-top rotate-45"></div>
-                  <div className="absolute top-12 right-[35%] w-[1px] h-14 bg-slate-600 origin-top -rotate-45"></div>
-                  <div className="absolute top-32 left-[30%] w-[1px] h-20 bg-red-500/50 origin-top -rotate-12"></div>
+                <div className="relative w-full flex-1 mt-4">
+                  {/* SVG Lines */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                    <line x1="50%" y1="20" x2="25%" y2="100" stroke="#475569" strokeWidth="2" strokeDasharray="4 4" className="opacity-60" />
+                    <line x1="50%" y1="20" x2="75%" y2="100" stroke="#475569" strokeWidth="2" strokeDasharray="4 4" className="opacity-60" />
+                    <line x1="25%" y1="120" x2="35%" y2="200" stroke="#ef4444" strokeWidth="2" className="drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] opacity-80" />
+                  </svg>
+                  
+                  {/* Nodes */}
+                  <div className="absolute top-[0px] left-1/2 -translate-x-1/2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/50 rounded-lg text-emerald-400 text-xs font-mono text-center z-10 shadow-[0_0_15px_rgba(16,185,129,0.2)] backdrop-blur-sm flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                    frontend-app
+                  </div>
+                  
+                  <div className="absolute top-[90px] left-1/4 -translate-x-1/2 px-4 py-2 bg-slate-800/80 border border-slate-600 rounded-lg text-slate-300 text-xs font-mono text-center z-10 backdrop-blur-sm">
+                    react-scripts
+                  </div>
+                  
+                  <div className="absolute top-[90px] left-[75%] -translate-x-1/2 px-4 py-2 bg-slate-800/80 border border-slate-600 rounded-lg text-slate-300 text-xs font-mono text-center z-10 backdrop-blur-sm">
+                    lodash@4.17.20
+                  </div>
+                  
+                  <div className="absolute top-[190px] left-[35%] -translate-x-1/2 px-4 py-2 bg-red-900/40 border border-red-500/50 rounded-lg text-red-400 text-xs font-mono text-center z-10 shadow-[0_0_20px_rgba(239,68,68,0.4)] backdrop-blur-sm flex flex-col items-center">
+                    <span className="font-bold">CVE-2023-45133</span>
+                    <span className="text-[9px] text-red-300 opacity-80 mt-0.5">CVSS: 9.8 CRITICAL</span>
+                  </div>
                 </div>
               </div>
             </div>
