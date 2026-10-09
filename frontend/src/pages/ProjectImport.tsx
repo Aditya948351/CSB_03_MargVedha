@@ -100,7 +100,7 @@ export default function ProjectImport() {
       try {
         const { saveScanResult, db } = await import('../firebase');
         const { doc, updateDoc, increment } = await import('firebase/firestore');
-        await saveScanResult(scanResult);
+        await saveScanResult(scanResult, user ? user.uid : 'anonymous');
 
         if (user) {
           const userRef = doc(db, 'users', user.uid);

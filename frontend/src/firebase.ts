@@ -16,10 +16,11 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export const saveScanResult = async (scanData: any) => {
+export const saveScanResult = async (scanData: any, userId: string = 'anonymous') => {
   try {
     const scansRef = collection(db, "scans");
     const docRef = await addDoc(scansRef, {
+      user_id: userId,
       scan_id: scanData.scan_id,
       uploaded_at: scanData.uploaded_at,
       project_count: scanData.projects.length,
@@ -35,12 +36,20 @@ export const saveScanResult = async (scanData: any) => {
   }
 };
 
-export const getScanHistory = async () => {
+export const getScanHistory = async (userId: string = 'anonymous') => {
   try {
     const scansRef = collection(db, "scans");
-    const q = query(scansRef, orderBy("uploaded_at", "desc"), limit(20));
+    // Wait for index creation or use simpler query, but orderBy requires a composite index if we use where()
+    // A quick hack for the hackathon is to fetch all ordered by date and filter client-side, 
+    // or just fetch by user_id. Let's fetch by user_id.
+    const q = query(scansRef, limit(50)); 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Filter to the specific user and sort manually to avoid needing a composite index
+    return docs
+      .filter((d: any) => d.user_id === userId)
+      .sort((a: any, b: any) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime())
+      .slice(0, 20);
   } catch (error) {
     console.error("Error fetching scan history:", error);
     return [];

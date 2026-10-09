@@ -4,18 +4,21 @@ import { Badge } from '../components/ui/Badge';
 import { Clock, ShieldAlert, Layers } from 'lucide-react';
 import { getScanHistory } from '../firebase';
 
+import { useAppStore } from '../store';
+
 export default function History() {
   const [scans, setScans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const user = useAppStore(state => state.user);
 
   useEffect(() => {
     async function loadScans() {
-      const history = await getScanHistory();
+      const history = await getScanHistory(user ? user.uid : 'anonymous');
       setScans(history);
       setLoading(false);
     }
     loadScans();
-  }, []);
+  }, [user]);
 
   return (
     <div className="space-y-6">
