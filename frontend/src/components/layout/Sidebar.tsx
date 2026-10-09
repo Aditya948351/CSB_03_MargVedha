@@ -70,6 +70,7 @@ export default function Sidebar() {
                   const { auth } = await import('../../firebase');
                   await auth.signOut();
                   useAppStore.getState().setUser(null);
+                  window.location.href = '/';
                 }}
                 className="text-slate-400 hover:text-red-500 transition-colors p-1"
                 title="Log Out"

@@ -55,8 +55,8 @@ export default function LandingPage() {
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Shield className="w-8 h-8 text-primary" />
+            <div className="bg-primary/5 p-1.5 rounded-lg border border-primary/10">
+              <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="w-9 h-9 object-contain" />
             </div>
             <span className="font-bold text-2xl tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">MARGVEDHA</span>
           </div>
@@ -71,8 +71,9 @@ export default function LandingPage() {
         </div>
       </nav>
 
+      <main className="max-w-7xl mx-auto px-6 py-12 lg:py-20 space-y-32">
       {/* Hero Section */}
-      <main className="relative max-w-7xl mx-auto px-6 py-20 lg:py-32 overflow-hidden min-h-[80vh] flex items-center">
+      <div className="relative overflow-hidden min-h-[80vh] flex items-center rounded-3xl bg-white border border-slate-200 shadow-xl shadow-slate-200/50 p-12">
         {/* Animated Background Waves */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-30">
           <svg className="absolute w-full h-[150%] top-[-25%] left-0 animate-[spin_120s_linear_infinite]" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -164,9 +165,10 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
+      </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8 mt-32">
+        <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-primary/20 transition-colors">
             <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-primary">
               <GitBranch className="w-7 h-7" />
