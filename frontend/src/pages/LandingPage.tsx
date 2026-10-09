@@ -48,24 +48,24 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-primary/20 relative overflow-hidden">
+    <div className="w-full min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-primary/20 relative overflow-x-hidden">
       {/* Massive Background Glowing Orbs similar to Sarvam */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120vw] h-[80vh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-emerald-400/10 to-transparent blur-[120px] -z-10 pointer-events-none"></div>
-      <div className="absolute top-1/3 left-[-20%] w-[70vw] h-[70vw] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2000px] max-w-[100vw] h-[80vh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-emerald-400/10 to-transparent blur-[120px] -z-10 pointer-events-none"></div>
+      <div className="absolute top-1/3 left-[-20%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
 
       {/* Navbar */}
-      <nav className="border-b border-slate-200/50 bg-white/60 backdrop-blur-xl sticky top-0 z-50">
+      <nav className="border-b border-slate-200/50 bg-white/60 backdrop-blur-xl sticky top-0 z-50 w-full">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-12">
             <img src="/MargVedha_Logo.png" alt="MargVedha Logo" className="h-14 w-auto object-contain" />
             
             {/* Nav Tabs */}
             <div className="hidden md:flex items-center gap-8 font-medium text-sm text-slate-600">
-              <a href="#features" className="hover:text-primary transition-colors">Products</a>
-              <a href="#competitors" className="hover:text-primary transition-colors">Features</a>
+              <a href="#how-it-works" className="hover:text-primary transition-colors">Products</a>
+              <a href="#features" className="hover:text-primary transition-colors">Features</a>
               <a href="#pricing" className="hover:text-primary transition-colors">Developers</a>
-              <a href="#" className="hover:text-primary transition-colors">Company</a>
+              <a href="#company" className="hover:text-primary transition-colors">Company</a>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ export default function LandingPage() {
       </div>
 
         {/* How It Works Pitch */}
-        <div className="mt-32 mb-16">
+        <div id="how-it-works" className="mt-32 mb-16 pt-16">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">How MARGVEDHA Works</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">From an uploaded repository to a merged GitHub patch in 3 simple steps.</p>
@@ -237,7 +237,7 @@ export default function LandingPage() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
+        <div id="features" className="grid md:grid-cols-3 gap-8 pt-16">
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-primary/20 transition-colors">
             <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-primary">
               <GitBranch className="w-7 h-7" />
@@ -346,7 +346,7 @@ export default function LandingPage() {
         </div>
 
         {/* Pricing Notice */}
-        <div className="mt-32 mb-16">
+        <div id="pricing" className="mt-32 mb-16">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Transparent Pricing</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">Start instantly. Scale when you need enterprise power.</p>
@@ -396,7 +396,7 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 text-center border-t border-slate-800">
+      <footer id="company" className="bg-slate-900 text-slate-400 py-12 text-center border-t border-slate-800 w-full">
         <div className="max-w-7xl mx-auto px-6">
           <p className="mb-2">Built with ❤️ for securing the supply chain.</p>
           <p>Contact Developer: <a href="mailto:devpathind.community@gmail.com" className="text-primary hover:text-primary/80 transition-colors font-medium">devpathind.community@gmail.com</a></p>
