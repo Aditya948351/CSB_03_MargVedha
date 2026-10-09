@@ -50,9 +50,11 @@ export default function LandingPage() {
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-primary/20 relative overflow-x-hidden">
       {/* Massive Background Glowing Orbs similar to Sarvam */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2000px] max-w-[100vw] h-[80vh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-emerald-400/10 to-transparent blur-[120px] -z-10 pointer-events-none"></div>
-      <div className="absolute top-1/3 left-[-20%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-400/10 via-transparent to-transparent blur-[100px] -z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2000px] max-w-[100vw] h-[80vh] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-emerald-400/10 to-transparent blur-[120px]"></div>
+        <div className="absolute top-1/3 -left-[20%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-400/10 via-transparent to-transparent blur-[100px]"></div>
+        <div className="absolute bottom-0 -right-[10%] w-[1000px] h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-400/10 via-transparent to-transparent blur-[100px] translate-y-1/2"></div>
+      </div>
 
       {/* Navbar */}
       <nav className="border-b border-slate-200/50 bg-white/60 backdrop-blur-xl sticky top-0 z-50 w-full">
