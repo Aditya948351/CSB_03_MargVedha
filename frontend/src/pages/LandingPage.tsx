@@ -173,12 +173,19 @@ export default function LandingPage() {
               </div>
 
               {/* Fake Terminal Footer */}
-              <div className="mt-12">
+              <div className="mt-12 flex items-center gap-6">
+                <button 
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-full font-bold shadow-[0_0_40px_-10px_rgba(14,165,233,0.5)] transition-all flex items-center gap-3 cursor-pointer"
+                >
+                  Explore Platform
+                  <ArrowRight className="w-5 h-5" />
+                </button>
                 <button 
                   onClick={() => document.getElementById('competitors')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="bg-primary/20 hover:bg-primary/30 text-primary-foreground border border-primary/30 px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-white font-medium flex items-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Bot className="w-5 h-5" />
+                  <Bot className="w-5 h-5 text-primary" />
                   View the Gap
                 </button>
               </div>
@@ -194,44 +201,101 @@ export default function LandingPage() {
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">From an uploaded repository to a merged GitHub patch in 3 simple steps.</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connecting lines for desktop */}
-            <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-slate-200 -z-10 w-2/3 mx-auto"></div>
+          <div className="space-y-32 relative">
+            {/* Connecting line */}
+            <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-0.5 bg-gradient-to-b from-blue-500/20 via-emerald-500/20 to-purple-500/20 -z-10"></div>
 
             {/* Step 1 */}
-            <div className="text-center relative">
-              <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 shadow-xl shadow-slate-200/50 rounded-full flex items-center justify-center mb-6">
-                <UploadCloud className="w-10 h-10 text-blue-500" />
+            <div className="grid md:grid-cols-2 gap-16 items-center">
+              <div className="order-2 md:order-1 bg-white p-8 rounded-3xl border border-slate-200 shadow-2xl shadow-blue-500/10 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-12 flex flex-col items-center justify-center text-center bg-slate-50">
+                  <UploadCloud className="w-16 h-16 text-blue-500 mb-4" />
+                  <div className="text-slate-900 font-bold text-lg mb-2">Drag & Drop ZIP Archive</div>
+                  <div className="text-slate-500 text-sm">or paste a GitHub Repository URL</div>
+                  <div className="mt-6 w-full max-w-xs h-10 bg-white rounded-lg border border-slate-200 flex items-center px-4">
+                    <span className="text-slate-400 text-sm">https://github.com/org/repo</span>
+                  </div>
+                </div>
               </div>
-              <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">1</div>
-              <h3 className="text-xl font-bold mb-3 text-slate-900">Upload or Connect</h3>
-              <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
-                Paste a GitHub link or securely upload an air-gapped ZIP archive. We immediately extract manifest files and dependencies.
-              </p>
+              <div className="order-1 md:order-2 relative">
+                <div className="absolute top-1/2 -left-[4.5rem] w-8 h-8 rounded-full bg-slate-900 text-white font-bold hidden md:flex items-center justify-center border-4 border-white shadow-lg shadow-blue-500/20 transform -translate-y-1/2 z-10">1</div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 font-bold tracking-wide text-xs mb-4">
+                  STEP 1: INGESTION
+                </div>
+                <h3 className="text-3xl font-bold mb-4 text-slate-900">Upload or Connect</h3>
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  Paste a GitHub link or securely upload an air-gapped ZIP archive. We immediately extract manifest files, analyze the supply chain, and trace deep dependencies without executing unverified code.
+                </p>
+              </div>
             </div>
 
             {/* Step 2 */}
-            <div className="text-center relative">
-              <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 shadow-xl shadow-slate-200/50 rounded-full flex items-center justify-center mb-6">
-                <Activity className="w-10 h-10 text-emerald-500" />
+            <div className="grid md:grid-cols-2 gap-16 items-center">
+              <div className="relative">
+                <div className="absolute top-1/2 -right-[4.5rem] w-8 h-8 rounded-full bg-slate-900 text-white font-bold hidden md:flex items-center justify-center border-4 border-white shadow-lg shadow-emerald-500/20 transform -translate-y-1/2 z-10">2</div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 font-bold tracking-wide text-xs mb-4">
+                  STEP 2: ANALYSIS
+                </div>
+                <h3 className="text-3xl font-bold mb-4 text-slate-900">Graph Generation</h3>
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  Our engine cross-references OSV.dev and CISA KEV to instantly render an interactive, color-coded node graph. Visually trace exactly how a CVE propagates from a transitive sub-dependency up to your root project.
+                </p>
               </div>
-              <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">2</div>
-              <h3 className="text-xl font-bold mb-3 text-slate-900">Graph Generation</h3>
-              <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
-                Our engine cross-references OSV.dev and CISA KEV to instantly render an interactive, color-coded node graph of vulnerability paths.
-              </p>
+              <div className="bg-[#0f172a] p-8 rounded-3xl border border-slate-700 shadow-2xl shadow-emerald-500/10 relative overflow-hidden h-[300px] flex items-center justify-center">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent"></div>
+                {/* Fake Graph Nodes */}
+                <div className="relative w-full h-full">
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 px-4 py-2 bg-emerald-500/20 border border-emerald-500/50 rounded-lg text-emerald-400 text-xs font-mono text-center z-10">Root Project</div>
+                  <div className="absolute top-24 left-1/4 w-28 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-300 text-xs font-mono text-center z-10">lodash</div>
+                  <div className="absolute top-24 right-1/4 w-28 px-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-300 text-xs font-mono text-center z-10">react</div>
+                  <div className="absolute bottom-12 left-1/3 w-32 px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-xs font-mono text-center z-10 shadow-[0_0_15px_rgba(239,68,68,0.3)]">CVE-2023-XXXX</div>
+                  {/* Fake Lines */}
+                  <div className="absolute top-12 left-[35%] w-[1px] h-14 bg-slate-600 origin-top rotate-45"></div>
+                  <div className="absolute top-12 right-[35%] w-[1px] h-14 bg-slate-600 origin-top -rotate-45"></div>
+                  <div className="absolute top-32 left-[30%] w-[1px] h-20 bg-red-500/50 origin-top -rotate-12"></div>
+                </div>
+              </div>
             </div>
 
             {/* Step 3 */}
-            <div className="text-center relative">
-              <div className="w-24 h-24 mx-auto bg-white border-4 border-slate-50 shadow-xl shadow-slate-200/50 rounded-full flex items-center justify-center mb-6">
-                <Wrench className="w-10 h-10 text-purple-500" />
+            <div className="grid md:grid-cols-2 gap-16 items-center">
+              <div className="order-2 md:order-1 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xl shadow-purple-500/10 relative overflow-hidden">
+                <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                  <div className="bg-slate-100 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+                    <GitBranch className="w-4 h-4 text-slate-500" />
+                    <span className="text-sm font-medium text-slate-700">MargVedha CyberSec wants to merge 1 commit</span>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <Bot className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <div className="text-slate-900 font-bold text-sm">Automated Security Patch: CVE-2023-XXXX</div>
+                        <div className="text-slate-500 text-xs">Generated by MargVedha CyberSec</div>
+                      </div>
+                    </div>
+                    <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-slate-300">
+                      <div className="text-red-400">- "lodash": "^4.17.20"</div>
+                      <div className="text-emerald-400">+ "lodash": "^4.17.21"</div>
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <div className="bg-emerald-500 text-white px-4 py-2 rounded-md text-sm font-bold shadow-md">Merge Pull Request</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="absolute top-0 right-1/2 translate-x-12 -translate-y-2 w-8 h-8 rounded-full bg-slate-900 text-white font-bold flex items-center justify-center border-4 border-white">3</div>
-              <h3 className="text-xl font-bold mb-3 text-slate-900">Simulate & Auto-Patch</h3>
-              <p className="text-slate-600 leading-relaxed max-w-sm mx-auto">
-                Preview how a package upgrade resolves the tree, generate a MargVedha CyberSec patch strategy, and 1-click open a Pull Request directly to GitHub.
-              </p>
+              <div className="order-1 md:order-2 relative">
+                <div className="absolute top-1/2 -left-[4.5rem] w-8 h-8 rounded-full bg-slate-900 text-white font-bold hidden md:flex items-center justify-center border-4 border-white shadow-lg shadow-purple-500/20 transform -translate-y-1/2 z-10">3</div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 text-purple-600 font-bold tracking-wide text-xs mb-4">
+                  STEP 3: REMEDIATION
+                </div>
+                <h3 className="text-3xl font-bold mb-4 text-slate-900">Simulate & Auto-Patch</h3>
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  Preview how a package upgrade resolves the tree, generate a MargVedha CyberSec patch strategy, and securely open a Pull Request directly to your GitHub repository with one click.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -265,6 +329,33 @@ export default function LandingPage() {
               Powered by the MargVedha CyberSec Model. Generate custom, 3-step actionable patching strategies instantly instead of parsing raw CVE logs.
             </p>
           </div>
+          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-primary/20 transition-colors">
+            <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-6 text-amber-600">
+              <Shield className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold mb-3 text-slate-900">Zero-Day Intelligence</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Stay ahead of emerging threats with proactive zero-day vulnerability scanning before they hit the national vulnerability databases.
+            </p>
+          </div>
+          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-primary/20 transition-colors">
+            <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6 text-indigo-600">
+              <Activity className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold mb-3 text-slate-900">CI/CD Integration</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Seamlessly bake supply chain security into your pipelines. Automatically block builds that introduce critical unpatched vulnerabilities.
+            </p>
+          </div>
+          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-primary/20 transition-colors">
+            <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-6 text-rose-600">
+              <UploadCloud className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-bold mb-3 text-slate-900">Automated Pull Requests</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Don't just detect vulnerabilities—fix them. One-click patch deployment generates and merges security updates directly into your repository.
+            </p>
+          </div>
         </div>
 
         {/* The Gap: Competitors Section */}
@@ -296,6 +387,24 @@ export default function LandingPage() {
               <h3 className="text-xl font-bold mb-3 text-slate-900">Cross-Project Impact</h3>
               <p className="text-slate-600 leading-relaxed">
                 Instead of fixing the same CVE repository by repository, we identify shared vulnerable dependencies across your entire enterprise portfolio, allowing you to prioritize high-impact global patches.
+              </p>
+            </div>
+            <div className="bg-white border border-amber-100 p-8 rounded-3xl shadow-lg relative">
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Context-Aware Prioritization</h3>
+              <p className="text-slate-600 leading-relaxed">
+                CVSS scores are not enough. We contextualize risk by factoring in Exploit Prediction Scoring System (EPSS) data to prioritize what actually matters to your specific architecture.
+              </p>
+            </div>
+            <div className="bg-white border border-purple-100 p-8 rounded-3xl shadow-lg relative">
+              <h3 className="text-xl font-bold mb-3 text-slate-900">Zero-Trust Architecture</h3>
+              <p className="text-slate-600 leading-relaxed">
+                We never execute untrusted `npm install` or `pip install` commands. Our static ingestion engine safely parses manifests without exposing your host machine to malicious post-install scripts.
+              </p>
+            </div>
+            <div className="bg-white border border-rose-100 p-8 rounded-3xl shadow-lg relative">
+              <h3 className="text-xl font-bold mb-3 text-slate-900">One-Click Workflows</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Legacy tools generate a PDF report that sits in an inbox. MARGVEDHA translates findings into an actionable GitHub Pull Request with a single click, completely closing the remediation loop.
               </p>
             </div>
           </div>
