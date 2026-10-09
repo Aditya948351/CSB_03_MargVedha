@@ -322,6 +322,14 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-400 py-12 text-center border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6">
+          <p className="mb-2">Built with ❤️ for securing the supply chain.</p>
+          <p>Contact Developer: <a href="mailto:devpathind.community@gmail.com" className="text-primary hover:text-primary/80 transition-colors font-medium">devpathind.community@gmail.com</a></p>
+        </div>
+      </footer>
     </div>
   );
 }
