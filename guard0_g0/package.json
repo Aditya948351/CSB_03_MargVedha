@@ -1,0 +1,120 @@
+{
+  "name": "@guard0/g0",
+  "version": "2.1.0",
+  "description": "Background check for AI agents — discover, assess, and test before you ship",
+  "type": "module",
+  "bin": {
+    "g0": "dist/bin/g0.js",
+    "g0-hook": "dist/src/hook-main.js"
+  },
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "templates",
+    "src/rules/**/*.yaml",
+    "src/testing/data/**/*.json"
+  ],
+  "scripts": {
+    "build": "npm run vendor:wasm && tsup",
+    "vendor:wasm": "node scripts/vendor-wasm.mjs",
+    "build:bin": "command -v bun >/dev/null || { echo 'build:bin requires Bun — install: curl -fsSL https://bun.sh/install | bash'; exit 1; }; npm run vendor:wasm && bun build scripts/bun-entry.ts --compile --outfile dist/bin-native/g0",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:perf": "vitest run --config vitest.perf.config.ts",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "g0": "tsx bin/g0.ts",
+    "prepublishOnly": "tsup && vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guard0-ai/g0.git"
+  },
+  "homepage": "https://guard0.ai/g0",
+  "bugs": {
+    "url": "https://github.com/guard0-ai/g0/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "security",
+    "assessment",
+    "scanner",
+    "owasp",
+    "owasp-agentic",
+    "agentic",
+    "langchain",
+    "crewai",
+    "mcp",
+    "openai",
+    "vercel-ai",
+    "bedrock",
+    "autogen",
+    "langchain4j",
+    "spring-ai",
+    "golang-ai",
+    "sast",
+    "dast",
+    "ai-security",
+    "agent-security",
+    "blast-radius",
+    "ai-bom",
+    "sbom",
+    "control-layer",
+    "prompt-injection",
+    "adversarial-testing",
+    "nist-ai-rmf",
+    "iso-42001",
+    "eu-ai-act",
+    "mitre-atlas",
+    "owasp-llm-top-10",
+    "ai-agent",
+    "llm-security",
+    "llm",
+    "sarif",
+    "cyclonedx",
+    "compliance",
+    "ai-governance",
+    "ai-risk",
+    "rag-security",
+    "mcp-security",
+    "devsecops"
+  ],
+  "author": "Rakshan AI Inc. (dba Guard0)",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ignore": "^7.0.6",
+    "ora": "^8.1.0",
+    "web-tree-sitter": "^0.25.10",
+    "yaml": "^2.5.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tree-sitter-wasms": "^0.1.13",
+    "tsup": "^8.2.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "overrides": {
+    "esbuild": ">=0.25.0"
+  }
+}

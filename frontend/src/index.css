@@ -12,6 +12,8 @@
   --color-success: #10b981;
   --color-text: #0f172a;
   --color-text-muted: #64748b;
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", "Space Grotesk", sans-serif;
 }
 
 @layer base {

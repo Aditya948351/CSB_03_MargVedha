@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Network, 
@@ -7,12 +7,15 @@ import {
   Layers, 
   Settings,
   Activity,
-  Clock
+  Clock,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { cn } from '../../utils/classnames';
 
 const navItems = [
   { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { path: '/perimeter', label: 'Perimeter (Fleet)', icon: ShieldCheck },
   { path: '/import', label: 'New Analysis', icon: Activity },
   { path: '/graph', label: 'Dependency Graph', icon: Network },
   { path: '/vulnerabilities', label: 'Vulnerabilities', icon: ShieldAlert },
@@ -25,7 +28,7 @@ const navItems = [
 import { useAppStore } from '../../store';
 
 export default function Sidebar() {
-  const { isDemoMode, user, scanCount } = useAppStore();
+  const { isDemoMode, user, scanCount, userPlan } = useAppStore();
   return (
     <aside className="w-64 bg-surface border-r border-border flex flex-col">
       <div className="h-16 flex items-center px-6 border-b border-border">
@@ -52,6 +55,25 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+        {/* 30-Day Free Trial Card matching GitGuardian */}
+        <div className="px-3 pt-4">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-primary/30 rounded-xl p-3 text-xs space-y-2 shadow-lg">
+            <div className="flex items-center gap-1.5 font-bold text-white">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Get a 30-day free trial</span>
+            </div>
+            <p className="text-[11px] text-text-muted leading-tight">
+              Try all fleet perimeter & Guard0 agentic features to improve developer security.
+            </p>
+            <Link
+              to="/perimeter"
+              className="block text-center py-1.5 px-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-[11px] font-bold transition-colors shadow-sm shadow-primary/30"
+            >
+              Start trial (₹199 / mo)
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div className="p-4 border-t border-border">
@@ -62,7 +84,15 @@ export default function Sidebar() {
                 <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-8 h-8 rounded-full shrink-0" />
                 <div className="flex flex-col overflow-hidden">
                   <span className="text-sm font-semibold truncate text-slate-900">{user.displayName || user.email}</span>
-                  <span className="text-[10px] text-text-muted">Pro Plan Active</span>
+                  <span className="text-[10px] font-bold text-primary">
+                    {user?.email === 'ap8548328@gmail.com' 
+                      ? '👑 Enterprise Superuser' 
+                      : userPlan === 'fleet' 
+                        ? 'Fleet Plan Active' 
+                        : userPlan === 'pro' 
+                          ? 'Pro Plan Active' 
+                          : 'Community Free Tier'}
+                  </span>
                 </div>
               </div>
               <button 
@@ -79,15 +109,21 @@ export default function Sidebar() {
               </button>
             </div>
             <div className="px-3 pb-2">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="font-medium text-slate-600">Free Scans</span>
-                <span className="font-bold text-primary">{Math.max(0, 10 - scanCount)}/10</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-1.5">
-                <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min(100, (scanCount / 10) * 100)}%` }}></div>
-              </div>
-              {scanCount >= 10 && (
-                <p className="text-[10px] text-red-500 mt-1 font-semibold leading-tight">Limit reached. ₹500/scan required.</p>
+              {user?.email === 'ap8548328@gmail.com' || userPlan !== 'free' ? (
+                <div className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                  <span>Full Access Status</span>
+                  <span>Unlimited</span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-medium text-slate-600">Free Scans</span>
+                    <span className="font-bold text-primary">{Math.max(0, 10 - scanCount)}/10</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                    <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min(100, (scanCount / 10) * 100)}%` }}></div>
+                  </div>
+                </>
               )}
             </div>
           </div>

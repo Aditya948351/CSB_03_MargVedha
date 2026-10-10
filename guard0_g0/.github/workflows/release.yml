@@ -1,0 +1,102 @@
+name: Release to npm
+
+on:
+  release:
+    types: [published]
+  # Manual re-run for when the release-event run fails (this workflow's
+  # failure history: v1.7.1 x2, v2.0.0 x3, v2.1.0) — republishes from the
+  # default branch without deleting and re-creating the tag/release.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          # Float the 22.x line — an exact pin goes stale and eventually
+          # breaks the npm upgrade below (npm 12 requires node >=22.22.2;
+          # the old 22.14.0 pin is what failed the first v2.1.0 run).
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+
+      - run: npm test
+
+      - run: npm run build
+
+      # Auth is npm OIDC "trusted publishing" — no token secret is wired
+      # (NODE_AUTH_TOKEN is setup-node's placeholder). That auth path needs
+      # npm >= 11.5.1; node 22's bundled npm 10.x only covers --provenance,
+      # and falls back to the placeholder token -> E404 on PUT. This upgrade
+      # step is therefore load-bearing for publish auth. Do not remove.
+      - run: npm install -g npm@latest
+
+      - run: npm publish --access public --provenance
+
+      - name: Publish OpenClaw plugin
+        working-directory: packages/g0-openclaw-plugin
+        run: |
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+          REMOTE_VERSION=$(npm view @guard0/g0-openclaw-plugin version 2>/dev/null || echo "0.0.0")
+          if [ "$LOCAL_VERSION" = "$REMOTE_VERSION" ]; then
+            echo "OpenClaw plugin v${LOCAL_VERSION} already published — skipping"
+          else
+            echo "Publishing OpenClaw plugin v${LOCAL_VERSION} (registry has v${REMOTE_VERSION})"
+            npm run build
+            npm publish --access public --provenance
+          fi
+
+  notify:
+    name: Notify Slack
+    needs: [publish]
+    runs-on: ubuntu-latest
+    if: failure()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Notify Slack - Fail
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v3.0.5
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "❌ Release Failed",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "❌ Release Failed", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Repository:*\n${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*Triggered by:*\n${{ github.actor }}" },
+                    { "type": "mrkdwn", "text": "*Ref:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Commit:*\n<https://github.com/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"},
+                    { "type": "mrkdwn", "text": "*Event:*\n${{ github.event_name }}" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Logs" },
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                      "style": "danger"
+                    }
+                  ]
+                }
+              ]
+            }

@@ -1,0 +1,575 @@
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import { Command, Option } from 'commander';
+import chalk from 'chalk';
+import { runScan } from '../../pipeline.js';
+import { reportTerminal } from '../../reporters/terminal.js';
+import { reportJson } from '../../reporters/json.js';
+import { reportSarif } from '../../reporters/sarif.js';
+import { reportJunit } from '../../reporters/junit.js';
+// v2: HTML and compliance reporters removed — available via Guard0 Platform
+import { loadConfig } from '../../config/loader.js';
+import { createSpinner } from '../ui.js';
+import { isRemoteUrl, parseTarget, cloneRepo } from '../../remote/clone.js';
+import { maybeShowCta, recordScan } from '../../platform/cta.js';
+import { nudgeGatedFlags } from '../../platform/gated-flag-nudge.js';
+import type { Severity } from '../../types/common.js';
+import type { PresetName } from '../../types/config.js';
+
+export const scanCommand = new Command('scan')
+  .description('Assess an AI agent project for security issues')
+  .argument('[path]', 'Path to the agent project or remote URL', '.')
+  .option('--json', 'Output as JSON')
+  .option('--sarif [file]', 'Output as SARIF 2.1.0')
+  .option('--junit [file]', 'Output as JUnit XML for CI integration')
+  // v2: --html is a Guard0 Platform feature. Kept as a hidden flag so a user
+  // passing it still gets a normal scan plus a CTA, instead of an unknown-option error.
+  .addOption(new Option('--html [file]', 'Generate an HTML report (Guard0 Platform)').hideHelp())
+  .option('-o, --output <file>', 'Write JSON output to file')
+  .option('-q, --quiet', 'Suppress terminal output')
+  .option('--severity <level>', 'Minimum severity to report (critical|high|medium|low)')
+  .option('--config <file>', 'Path to config file (default: .g0.yaml)')
+  .option('--rules <ids>', 'Only run specific rules (comma-separated)')
+  .option('--exclude-rules <ids>', 'Skip specific rules (comma-separated)')
+  .option('--frameworks <ids>', 'Only check specific frameworks (comma-separated)')
+  .option('--min-confidence <level>', 'Minimum confidence to report (high|medium|low)')
+  .option('--ai', 'Enable AI-powered analysis (requires ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY)')
+  .option('--model <model>', 'AI model to use (e.g., claude-sonnet-4-5-20250929, gpt-5-mini, gemini-2.5-flash)')
+  // v2: --report and --upload are Guard0 Platform features. Kept as hidden
+  // flags so passing them still scans normally and surfaces a CTA.
+  .addOption(new Option('--report <std>', 'Generate a compliance report (Guard0 Platform)').hideHelp())
+  .addOption(new Option('--upload', 'Upload results to Guard0 Platform').hideHelp())
+  .option('--include-tests', 'Include test files in agent graph (normally excluded)')
+  .option('--show-all', 'Show all findings including suppressed utility-code ones')
+  .option('--ruleset <tier>', 'Rule pack tier: recommended (~200 high-signal), extended (~800), or all (default)')
+  .option('--preset <name>', 'Scan policy preset: strict, balanced, or permissive')
+  .option('--rules-dir <path>', 'Directory of custom YAML rules')
+  .option('--ai-consensus <n>', 'Run AI FP detection N times and use majority vote', parseInt)
+  .option('--openclaw-hardening [url]', 'Live hardening audit against OpenClaw instance (default: http://localhost:8080)')
+  .option('--openclaw-audit [path]', 'Deployment audit of OpenClaw host (default: /data/.openclaw/agents)')
+  .option('--fix', 'Auto-fix failed deployment audit checks (use with --openclaw-audit)')
+  .option('--ci', 'CI/CD gate mode — evaluate against .g0-policy.yaml and exit with policy-based exit code')
+  .option('--host-audit', 'Run OS-level host hardening audit (firewall, encryption, SSH, etc.)')
+  .option('--no-banner', 'Suppress the g0 banner')
+  .action(async (targetPath: string, options: {
+    json?: boolean;
+    sarif?: string | boolean;
+    junit?: string | boolean;
+    output?: string;
+    quiet?: boolean;
+    severity?: string;
+    config?: string;
+    rules?: string;
+    excludeRules?: string;
+    frameworks?: string;
+    minConfidence?: string;
+    ai?: boolean;
+    model?: string;
+    // v2: gated flags — hidden, fire a CTA, never block the scan
+    html?: string | boolean;
+    upload?: boolean;
+    report?: string;
+    includeTests?: boolean;
+    showAll?: boolean;
+    ruleset?: string;
+    openclawHardening?: string | boolean;
+    openclawAudit?: string | boolean;
+    fix?: boolean;
+    ci?: boolean;
+    hostAudit?: boolean;
+    banner?: boolean;
+    preset?: string;
+    aiConsensus?: number;
+    rulesDir?: string;
+  }) => {
+    let resolvedPath: string;
+    let cleanup: (() => void) | undefined;
+
+    // Handle remote URLs
+    if (isRemoteUrl(targetPath)) {
+      const target = parseTarget(targetPath);
+      const spinner = options.quiet ? null : createSpinner(`Cloning ${target.owner}/${target.repo}...`);
+      spinner?.start();
+      try {
+        const result = await cloneRepo(target);
+        resolvedPath = result.tempDir;
+        cleanup = result.cleanup;
+        spinner?.stop();
+        if (!options.quiet) {
+          console.log(`  Cloned ${target.url} to temporary directory`);
+        }
+      } catch (err) {
+        spinner?.stop();
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`Clone failed: ${msg}`);
+        if (msg.includes('not found') || msg.includes('404')) {
+          console.error(`Hint: Check that the repository exists and is accessible. Private repos require authentication via \`gh auth login\` or a git credential helper.`);
+        } else if (msg.includes('timeout') || msg.includes('ETIMEDOUT') || msg.includes('ENOTFOUND')) {
+          console.error(`Hint: Check your network connection and try again. If behind a proxy, configure git: \`git config --global http.proxy <url>\`.`);
+        } else if (msg.includes('Authentication') || msg.includes('403') || msg.includes('401')) {
+          console.error(`Hint: Authentication failed. For private repos, ensure you have access and run \`gh auth login\` or configure SSH keys.`);
+        }
+        process.exit(1);
+      }
+    } else {
+      resolvedPath = path.resolve(targetPath);
+      if (!fs.existsSync(resolvedPath)) {
+        console.error(`Error: Path does not exist: ${resolvedPath}`);
+        console.error(`Hint: Run \`g0 scan .\` to scan the current directory, or provide a valid path.`);
+        if (/^(github\.com|gitlab\.com)\//.test(targetPath)) {
+          console.error(`Hint: To scan a remote repository, use the full URL: \`g0 scan https://${targetPath}\``);
+        }
+        process.exit(1);
+      }
+    }
+
+    // Load config
+    let config;
+    try {
+      config = loadConfig(resolvedPath, options.config) ?? undefined;
+    } catch (err) {
+      const configMsg = err instanceof Error ? err.message : String(err);
+      console.error(`Config error: ${configMsg}`);
+      if (configMsg.includes('YAML') || configMsg.includes('parse')) {
+        console.error(`Hint: Check your .g0.yaml for syntax errors. Use a YAML validator to identify the issue.`);
+      }
+      process.exit(1);
+    }
+
+    // CLI --preset overrides config file preset
+    if (options.preset) {
+      const validPresets = ['strict', 'balanced', 'permissive', 'openclaw'];
+      if (!validPresets.includes(options.preset)) {
+        console.error(`Invalid preset: ${options.preset}. Available: ${validPresets.join(', ')}`);
+        process.exit(1);
+      }
+      if (!config) config = {};
+      config.preset = options.preset as PresetName;
+      // Re-load with preset applied
+      const { resolvePreset } = await import('../../config/presets/index.js');
+      const { deepMergeConfig } = await import('../../config/merge.js');
+      const preset = resolvePreset(options.preset as PresetName);
+      config = deepMergeConfig(preset, config);
+    }
+
+    // CLI --rules-dir overrides config file
+    if (options.rulesDir) {
+      if (!config) config = {};
+      config.rules_dir = options.rulesDir;
+    }
+
+    // Gated flags (Guard0 Platform features) — never block the scan, just
+    // surface a CTA so the user knows what they asked for. maybeShowCta only
+    // suppresses on non-TTY/CI; it has no idea whether we're mid-emission of
+    // a machine-readable format, so we compute that guard here and skip the
+    // nudge entirely on any machine-output path (--json/--sarif/--junit/
+    // --output/--quiet) to avoid corrupting the output stream even in a real TTY.
+    const machineOutput = !!(options.json || options.sarif || options.junit || options.output || options.quiet);
+    nudgeGatedFlags(
+      { html: options.html, upload: options.upload, report: options.report },
+      { machineOutput, configCta: config?.cta },
+    );
+
+    const spinner = options.quiet ? null : createSpinner('Scanning agent project...');
+    spinner?.start();
+
+    try {
+      const result = await runScan({
+        targetPath: resolvedPath,
+        config,
+        severity: options.severity as Severity | undefined,
+        rules: options.rules?.split(',').map(s => s.trim()),
+        excludeRules: options.excludeRules?.split(',').map(s => s.trim()),
+        frameworks: options.frameworks?.split(',').map(s => s.trim()),
+        aiAnalysis: options.ai,
+        aiModel: options.model,
+        includeTests: options.includeTests,
+        showAll: options.showAll,
+        ruleset: options.ruleset as 'recommended' | 'extended' | 'all' | undefined,
+      });
+      spinner?.stop();
+
+      // Lifetime scan count (unconditional, regardless of output mode, so
+      // counts stay accurate) — the milestone CTA itself only fires below,
+      // on the human-output branch.
+      const scanCount = recordScan();
+
+      // Apply risk acceptance from config
+      let acceptedCount = 0;
+      if (config?.risk_accepted?.length) {
+        const { applyRiskAcceptance, classifyWaivers } = await import('../../config/risk-acceptance.js');
+        const acceptance = applyRiskAcceptance(result.findings, config.risk_accepted);
+        acceptedCount = acceptance.acceptedCount;
+
+        // Surface waiver lapses — an expired waiver silently re-activates its
+        // finding, so teams must be told rather than left assuming coverage.
+        if (!options.json) {
+          const { expired, expiringSoon } = classifyWaivers(config.risk_accepted);
+          for (const w of expired) {
+            console.log(chalk.red(`  ⚠ Waiver expired for ${w.rule} (expired ${w.expires}) — finding is active again`));
+          }
+          for (const w of expiringSoon) {
+            console.log(chalk.yellow(`  ⚠ Waiver for ${w.rule} expires soon (${w.expires})`));
+          }
+        }
+      }
+
+      // Record evidence for governance
+      try {
+        const { createEvidenceRecord } = await import('../../governance/evidence-collector.js');
+        const scanGrade = result.score.grade;
+        const scanStandards = [...new Set(result.findings.flatMap(f => {
+          const s = f.standards;
+          return [
+            ...(s.owaspAgentic ?? []),
+            ...(s.nistAiRmf ?? []),
+            ...(s.iso42001 ?? []),
+          ];
+        }))];
+        createEvidenceRecord('scan', 'g0 scan', `Scan of ${resolvedPath}: grade ${scanGrade}, ${result.findings.length} findings`, {
+          grade: scanGrade,
+          totalFindings: result.findings.length,
+          criticalCount: result.findings.filter(f => f.severity === 'critical').length,
+          highCount: result.findings.filter(f => f.severity === 'high').length,
+          domains: [...new Set(result.findings.map(f => f.domain))],
+          acceptedCount,
+        }, scanStandards);
+      } catch (err) {
+        // Evidence collection is non-critical but log for debugging
+        if (process.env.G0_DEBUG) {
+          console.error(`Evidence collection failed: ${err instanceof Error ? err.message : err}`);
+        }
+      }
+
+      // Apply confidence filtering (default: hide low-confidence findings)
+      const confidenceOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+      const minLevel = options.minConfidence
+        ? (confidenceOrder[options.minConfidence] ?? 2)
+        : 1; // default = medium (hides low-confidence)
+      const allFindings = result.findings;
+      result.findings = allFindings.filter(f => (confidenceOrder[f.confidence] ?? 2) <= minLevel);
+      const hiddenLowConfidence = allFindings.length - result.findings.length;
+
+      if (options.junit) {
+        const junitPath = typeof options.junit === 'string' ? options.junit : undefined;
+        const junit = reportJunit(result, junitPath);
+        if (!junitPath) {
+          console.log(junit);
+        } else if (!options.quiet) {
+          console.log(`JUnit XML report written to: ${junitPath}`);
+        }
+      } else if (options.sarif) {
+        const sarifPath = typeof options.sarif === 'string' ? options.sarif : undefined;
+        const sarif = reportSarif(result, sarifPath);
+        if (!sarifPath) {
+          console.log(sarif);
+        } else if (!options.quiet) {
+          console.log(`SARIF report written to: ${sarifPath}`);
+        }
+      } else if (options.json) {
+        const json = reportJson(result, options.output);
+        if (!options.output) {
+          console.log(json);
+        }
+      } else {
+        reportTerminal(result, {
+          showBanner: options.banner !== false,
+          showUploadNudge: true,
+          hiddenLowConfidence,
+          configCta: config?.cta,
+        });
+        if ([5, 25, 100].includes(scanCount)) {
+          maybeShowCta('scan-milestone', { detail: `${scanCount} scans`, configCta: config?.cta });
+        }
+      }
+
+      // Also write JSON if --output specified alongside terminal
+      if (options.output && !options.json) {
+        reportJson(result, options.output);
+      }
+
+      // v2: Compliance reports and platform upload removed
+      // Available via Guard0 Platform (guard0.ai/signup)
+      // CI gate evaluation
+      if (options.ci) {
+        try {
+          const { runCIGate, formatCIOutput, formatGitHubAnnotations } = await import('../../ci/gate.js');
+          const ciResult = runCIGate({
+            scanContext: {
+              grade: result.score.grade,
+              criticalCount: result.findings.filter(f => f.severity === 'critical').length,
+              highCount: result.findings.filter(f => f.severity === 'high').length,
+              standards: [...new Set(result.findings.flatMap(f => [
+                ...(f.standards.owaspAgentic ?? []),
+                ...(f.standards.nistAiRmf ?? []),
+                ...(f.standards.iso42001 ?? []),
+              ]))],
+              domains: [...new Set(result.findings.map(f => f.domain))],
+            },
+            searchPath: resolvedPath,
+          });
+
+          // Print GitHub Actions annotations if in CI
+          if (process.env.GITHUB_ACTIONS) {
+            const annotations = formatGitHubAnnotations(ciResult);
+            if (annotations) console.log(annotations);
+          }
+
+          if (!options.quiet) {
+            console.log(formatCIOutput(ciResult));
+          }
+
+          if (ciResult.exitCode > 0) {
+            process.exit(ciResult.exitCode);
+          }
+        } catch (err) {
+          if (!options.quiet) {
+            console.error(`  CI gate evaluation failed: ${err instanceof Error ? err.message : err}`);
+          }
+        }
+      }
+
+      // Host hardening audit
+      if (options.hostAudit) {
+        const hostSpinner = options.quiet ? null : createSpinner('Running host hardening audit...');
+        hostSpinner?.start();
+        try {
+          const { auditHostHardening } = await import('../../endpoint/host-hardening.js');
+          const hostResult = await auditHostHardening();
+          hostSpinner?.stop();
+
+          if (options.json) {
+            console.log(JSON.stringify(hostResult, null, 2));
+          } else {
+            const chalk = (await import('chalk')).default;
+            const passed = hostResult.checks.filter(c => c.status === 'pass').length;
+            const failed = hostResult.checks.filter(c => c.status === 'fail').length;
+            const skipped = hostResult.checks.filter(c => c.status === 'skip').length;
+            console.log('');
+            console.log(chalk.bold(`  Host Hardening Audit (${hostResult.platform})`));
+            console.log(chalk.dim('  ' + '\u2500'.repeat(74)));
+            console.log(`  ${chalk.green(`${passed} passed`)}  ${chalk.red(`${failed} failed`)}  ${chalk.dim(`${skipped} skipped`)}`);
+            console.log('');
+            for (const check of hostResult.checks) {
+              const icon = check.status === 'pass' ? chalk.green('\u2713') :
+                           check.status === 'fail' ? chalk.red('\u2717') : chalk.dim('\u2013');
+              const sev = check.severity === 'critical' ? chalk.red(`[${check.severity}]`) :
+                          check.severity === 'high' ? chalk.yellow(`[${check.severity}]`) :
+                          chalk.dim(`[${check.severity}]`);
+              console.log(`  ${icon} ${check.id} ${check.name} ${sev}`);
+              if (check.status === 'fail' && check.detail) {
+                console.log(`    ${chalk.dim(check.detail)}`);
+              }
+            }
+          }
+
+          if (hostResult.checks.some(c => c.status === 'fail' && c.severity === 'critical')) {
+            process.exit(1);
+          }
+        } catch (err) {
+          hostSpinner?.stop();
+          if (!options.quiet) {
+            console.error(`  Host audit failed: ${err instanceof Error ? err.message : err}`);
+          }
+        }
+      }
+
+      // OpenClaw live hardening probe
+      if (options.openclawHardening !== undefined) {
+        const hardeningUrl = typeof options.openclawHardening === 'string'
+          ? options.openclawHardening
+          : 'http://localhost:8080';
+        const hardeningSpinner = options.quiet ? null : createSpinner(`Probing OpenClaw instance at ${hardeningUrl}...`);
+        hardeningSpinner?.start();
+        try {
+          const { probeOpenClawInstance } = await import('../../mcp/openclaw-hardening.js');
+          const hardeningResult = await probeOpenClawInstance(hardeningUrl);
+          hardeningSpinner?.stop();
+
+          if (options.json) {
+            console.log(JSON.stringify(hardeningResult, null, 2));
+          } else {
+            const { reportOpenClawHardeningTerminal } = await import('../../reporters/openclaw-hardening-terminal.js');
+            reportOpenClawHardeningTerminal(hardeningResult);
+          }
+
+          if (hardeningResult.summary.overallStatus === 'critical') {
+            process.exit(1);
+          }
+        } catch (err) {
+          hardeningSpinner?.stop();
+          if (!options.quiet) {
+            console.error(`  OpenClaw hardening probe failed: ${err instanceof Error ? err.message : err}`);
+          }
+        }
+      }
+      // OpenClaw deployment audit (host-level checks)
+      if (options.openclawAudit !== undefined) {
+        const agentDataPath = typeof options.openclawAudit === 'string'
+          ? options.openclawAudit
+          : '/data/.openclaw/agents';
+        const auditSpinner = options.quiet ? null : createSpinner(`Running OpenClaw deployment audit on ${agentDataPath}...`);
+        auditSpinner?.start();
+        try {
+          const { auditOpenClawDeployment } = await import('../../mcp/openclaw-deployment.js');
+          const auditResult = await auditOpenClawDeployment({ agentDataPath });
+          auditSpinner?.stop();
+
+          if (options.json) {
+            console.log(JSON.stringify(auditResult, null, 2));
+          } else {
+            const { reportDeploymentAuditTerminal } = await import('../../reporters/openclaw-deployment-terminal.js');
+            reportDeploymentAuditTerminal(auditResult, config?.risk_accepted);
+
+            // Generate remediation configs for failed checks
+            const failedIds = new Set(auditResult.checks.filter(c => c.status === 'fail').map(c => c.id));
+            const chalk = (await import('chalk')).default;
+
+            // Egress iptables rules (C1)
+            if (auditResult.egressResult && auditResult.egressResult.violations.length > 0) {
+              const { generateIptablesRules, formatRulesAsScript } = await import('../../endpoint/egress-rules.js');
+              const ruleSet = await generateIptablesRules(
+                auditResult.egressResult.connections
+                  .filter(c => c.remoteHost)
+                  .map(c => c.remoteHost!)
+                  .filter((v, i, a) => a.indexOf(v) === i),
+              );
+              console.log('');
+              console.log(chalk.bold('  Generated: Egress iptables Rules (C1)'));
+              console.log(chalk.dim('  ' + '\u2500'.repeat(74)));
+              console.log(chalk.dim('  Apply: sudo bash egress-rules.sh'));
+              console.log('');
+              const script = formatRulesAsScript(ruleSet);
+              for (const line of script.split('\n').slice(0, 30)) {
+                console.log(`  ${chalk.dim(line)}`);
+              }
+              if (ruleSet.unresolved.length > 0) {
+                console.log(chalk.yellow(`  ${ruleSet.unresolved.length} entries could not be resolved to IPs`));
+              }
+            }
+
+            // auditd rules (C5)
+            if (failedIds.has('OC-H-032') || failedIds.has('OC-H-033') || failedIds.has('OC-H-031')) {
+              const { generateAuditdRules, formatAuditdRulesFile } = await import('../../endpoint/auditd-rules.js');
+              const auditdRules = generateAuditdRules({ agentDataPath });
+              const ruleCount = auditdRules.sections.reduce((n, s) => n + s.rules.length, 0);
+              console.log('');
+              console.log(chalk.bold('  Generated: auditd Rules (C5)'));
+              console.log(chalk.dim('  ' + '\u2500'.repeat(74)));
+              console.log(chalk.dim(`  ${ruleCount} rules across ${auditdRules.sections.length} categories`));
+              console.log(chalk.dim(`  Install: sudo cp <rules-file> ${auditdRules.rulesFilePath} && sudo augenrules --load`));
+              console.log('');
+              for (const section of auditdRules.sections) {
+                console.log(`  ${chalk.cyan(section.title)} (${section.rules.length} rules)`);
+                for (const rule of section.rules.slice(0, 3)) {
+                  console.log(`    ${chalk.dim(rule)}`);
+                }
+                if (section.rules.length > 3) {
+                  console.log(chalk.dim(`    ... and ${section.rules.length - 3} more`));
+                }
+              }
+            }
+
+            // Falco rules (C1/C4/C5/H1)
+            if (failedIds.size > 0) {
+              const { generateFalcoRules } = await import('../../endpoint/falco-rules.js');
+              const falcoRules = generateFalcoRules({
+                agentDataPath,
+                egressAllowlist: auditResult.egressResult?.connections
+                  .filter(c => c.remoteHost)
+                  .map(c => c.remoteHost!)
+                  .filter((v, i, a) => a.indexOf(v) === i),
+              });
+              console.log('');
+              console.log(chalk.bold('  Generated: Falco Rules (C1/C4/C5/H1)'));
+              console.log(chalk.dim('  ' + '\u2500'.repeat(74)));
+              console.log(chalk.dim(`  ${falcoRules.ruleCount} rules, ${falcoRules.macros.length} macros, ${falcoRules.lists.length} lists`));
+              console.log(chalk.dim('  Install: cp g0-openclaw-falco.yaml /etc/falco/rules.d/'));
+              console.log(chalk.dim('  Falco uses eBPF for kernel-level monitoring — no g0 kernel dependency'));
+              console.log('');
+              // Show rule names from the YAML
+              const ruleNames = falcoRules.yaml.match(/^- rule: (.+)$/gm);
+              if (ruleNames) {
+                for (const name of ruleNames) {
+                  console.log(`  ${chalk.dim(name.replace('- rule: ', ''))}`);
+                }
+              }
+            }
+          }
+
+          // Auto-fix failed checks
+          if (options.fix) {
+            const chalk = (await import('chalk')).default;
+            const { fixDeploymentFindings } = await import('../../mcp/openclaw-deployment.js');
+            const fixes = await fixDeploymentFindings(auditResult, {
+              agentDataPath,
+              dryRun: false,
+            });
+
+            if (fixes.length > 0) {
+              console.log('');
+              console.log(chalk.bold('  Auto-Fix Results'));
+              console.log(chalk.dim('  ' + '\u2500'.repeat(74)));
+              for (const fix of fixes) {
+                const icon = fix.applied ? chalk.green('\u2713') : chalk.yellow('\u2192');
+                console.log(`  ${icon} ${fix.checkId}: ${fix.description}`);
+                if (fix.backupPath) {
+                  console.log(`    ${chalk.dim(`Backup: ${fix.backupPath}`)}`);
+                }
+                if (fix.error) {
+                  console.log(`    ${chalk.red(fix.error)}`);
+                }
+              }
+              const applied = fixes.filter(f => f.applied).length;
+              if (applied > 0) {
+                console.log('');
+                console.log(chalk.yellow('  Note: Docker daemon.json changes require `systemctl restart docker`'));
+              }
+            }
+          }
+
+          // AI-powered attack chain analysis
+          if (options.ai) {
+            try {
+              const { getAIProvider } = await import('../../ai/provider.js');
+              const aiProvider = getAIProvider({ model: options.model });
+              if (aiProvider) {
+                const aiSpinner = options.quiet ? null : createSpinner('Running AI attack chain analysis...');
+                aiSpinner?.start();
+                const { analyzeAuditWithAI } = await import('../../mcp/openclaw-deployment.js');
+                const insights = await analyzeAuditWithAI(auditResult, aiProvider);
+                aiSpinner?.stop();
+                const { formatAIInsights } = await import('../../reporters/openclaw-deployment-terminal.js');
+                formatAIInsights(insights);
+              }
+            } catch (err) {
+              if (!options.quiet) {
+                console.error(`  AI analysis failed: ${err instanceof Error ? err.message : err}`);
+              }
+            }
+          }
+
+          if (auditResult.summary.overallStatus === 'critical') {
+            process.exit(1);
+          }
+        } catch (err) {
+          auditSpinner?.stop();
+          if (!options.quiet) {
+            console.error(`  OpenClaw deployment audit failed: ${err instanceof Error ? err.message : err}`);
+          }
+        }
+      }
+    } catch (error) {
+      spinner?.stop();
+      const scanMsg = error instanceof Error ? error.message : String(error);
+      console.error(`Scan failed: ${scanMsg}`);
+      if (scanMsg.includes('ENOMEM') || scanMsg.includes('heap')) {
+        console.error(`Hint: The project may be too large for available memory. Try excluding paths: \`g0 scan . --exclude-paths node_modules,dist\``);
+      } else if (scanMsg.includes('EACCES') || scanMsg.includes('permission')) {
+        console.error(`Hint: Permission denied reading files. Check directory permissions or run from an accessible location.`);
+      }
+      process.exit(1);
+    } finally {
+      cleanup?.();
+    }
+  });

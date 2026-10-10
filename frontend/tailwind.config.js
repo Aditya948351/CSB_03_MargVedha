@@ -6,7 +6,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Space Grotesk"', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', '"Space Grotesk"', 'sans-serif'],
+        serif: ['"Newsreader"', 'Georgia', 'serif'],
+        display: ['"Newsreader"', 'Georgia', 'serif'],
         mono: ['"Space Grotesk"', 'monospace'],
       },
       colors: {

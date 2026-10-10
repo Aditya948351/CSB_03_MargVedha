@@ -1,0 +1,174 @@
+# Scoring Methodology
+
+g0 produces a **0-100 security score** with a letter grade (A-F) for each scan. Scores are calculated per-domain and then combined via weighted average.
+
+## Score Formula
+
+```
+Overall Score = ROUND( SUM(domain_score * domain_weight) / SUM(domain_weight) )
+
+Domain Score  = MAX(0, ROUND(100 - total_deduction))
+
+total_deduction = SUM( severity_base * reachability_mult * exploitability_mult )
+                  for each finding in the domain
+```
+
+## Grade Thresholds
+
+| Grade | Score Range | Meaning |
+|-------|-----------|---------|
+| **A** | 90-100 | Excellent — minimal security issues |
+| **B** | 80-89 | Good — low risk, minor improvements needed |
+| **C** | 70-79 | Acceptable — moderate risk, action recommended |
+| **D** | 60-69 | Poor — significant risk, remediation required |
+| **F** | 0-59 | Failing — critical risks, immediate action needed |
+
+## Grade Cap (criticals never read as a healthy grade)
+
+Domain scores are floored at 0 and weighted-averaged across 12 domains, so a
+handful of criticals in one domain would otherwise be diluted into a
+misleadingly high overall. To prevent that, the overall score is capped so the
+letter grade can never contradict the finding counts a user can see:
+
+| Condition | Grade ceiling |
+|-----------|---------------|
+| ≥ 3 exploitable ("material") critical findings | **F** (≤ 55) |
+| ≥ 1 exploitable critical finding | **D** (≤ 69) |
+| ≥ 5 critical findings (any reachability) | **D** (≤ 69) |
+| ≥ 1 critical finding | **C** (≤ 79) |
+| ≥ 5 exploitable high findings | **C** (≤ 79) |
+| ≥ 8 high findings | **B** (≤ 89) |
+
+A finding is *material* unless it is risk-accepted, or both `utility-code` and
+`unlikely`. When a cap applies, the scan output shows the reason (e.g.
+"Grade capped: 3 exploitable critical findings"). Reachability is a best-effort
+heuristic (see analyzability), so a large count of criticals caps the grade even
+when they currently read as low-reachability — "unreachable" is not "safe".
+
+## Severity Deductions
+
+Each finding deducts points from its domain score based on severity:
+
+| Severity | Base Deduction |
+|----------|---------------|
+| Critical | 20 points |
+| High | 10 points |
+| Medium | 4 points |
+| Low | 1 point |
+| Info | 0 points |
+
+## Reachability Multipliers
+
+Findings are weighted by how accessible the vulnerable code is:
+
+| Reachability | Multiplier | Description |
+|-------------|-----------|-------------|
+| `agent-reachable` | 1.0x | In agent definition or directly called by agent |
+| `tool-reachable` | 1.0x | In tool implementation called by agent |
+| `endpoint-reachable` | 0.8x | In API route handler or HTTP endpoint |
+| `utility-code` | 0.3x | Helper/library code not on agent path |
+| `unknown` | 0.6x | Reachability not determined |
+
+Utility code gets a 70% reduction because vulnerabilities in code not reachable from agent entry points pose significantly lower risk.
+
+## Exploitability Multipliers
+
+Findings are further weighted by likelihood of exploitation:
+
+| Exploitability | Multiplier | Description |
+|---------------|-----------|-------------|
+| `confirmed` | 1.2x | Taint flow confirmed from input to vulnerable sink |
+| `likely` | 1.0x | High confidence the vulnerability is exploitable |
+| `unlikely` | 0.4x | Constraints block typical exploitation paths |
+| `not-assessed` | 0.7x | Default when taint analysis not available |
+
+Utility-code findings are automatically tagged `unlikely` (0.4x).
+
+## Domain Weights
+
+Domains are weighted by their relative importance to agent security:
+
+| Domain | Weight | Relative % |
+|--------|--------|-----------|
+| Goal Integrity | 1.5 | 10.1% |
+| Tool Safety | 1.5 | 10.1% |
+| Rogue Agent | 1.4 | 9.5% |
+| Code Execution | 1.3 | 8.8% |
+| Data Leakage | 1.3 | 8.8% |
+| Identity & Access | 1.2 | 8.1% |
+| Cascading Failures | 1.2 | 8.1% |
+| Reliability Bounds | 1.2 | 8.1% |
+| Memory & Context | 1.1 | 7.4% |
+| Inter-Agent | 1.1 | 7.4% |
+| Supply Chain | 1.0 | 6.8% |
+| Human Oversight | 1.0 | 6.8% |
+
+**Total weight sum:** 14.8
+
+## Scoring Examples
+
+### Example 1: Critical finding in agent code
+
+```
+Severity:       critical (20 pts)
+Reachability:   agent-reachable (1.0x)
+Exploitability: confirmed (1.2x)
+Deduction:      20 * 1.0 * 1.2 = 24 points from domain score
+```
+
+### Example 2: High finding in utility code
+
+```
+Severity:       high (10 pts)
+Reachability:   utility-code (0.3x)
+Exploitability: unlikely (0.4x, auto-set)
+Deduction:      10 * 0.3 * 0.4 = 1.2 points from domain score
+```
+
+88% reduction from full impact due to reachability + exploitability context.
+
+### Example 3: Medium finding with compensating control
+
+```
+Severity:       medium (4 pts) -> low (1 pt) after control detection
+Reachability:   endpoint-reachable (0.8x)
+Exploitability: likely (1.0x)
+Deduction:      1 * 0.8 * 1.0 = 0.8 points from domain score
+```
+
+## CVSS Scoring for Dynamic Tests
+
+When `g0 test --adaptive` confirms a vulnerability, the finding is scored with a CVSS 3.1 base vector in addition to g0's standard scoring. CVSS provides an industry-standard severity rating (0.0-10.0) that maps to severity labels:
+
+| CVSS Score | Severity |
+|-----------|----------|
+| 9.0-10.0 | Critical |
+| 7.0-8.9 | High |
+| 4.0-6.9 | Medium |
+| 0.1-3.9 | Low |
+| 0.0 | None |
+
+The CVSS vector is derived from:
+- **Attack Vector (AV)**: Network — all dynamic tests target network-accessible agents
+- **Attack Complexity (AC)**: Low if ≤3 turns succeeded, High if >10 turns required
+- **Privileges Required (PR)**: None (unauthenticated) or Low (if auth headers provided)
+- **User Interaction (UI)**: None — attacks are fully automated
+- **Scope (S)**: Changed if the attack crosses trust boundaries (e.g., data exfiltration)
+- **Impact (C/I/A)**: Derived from the attack category and observed behavior
+
+CVSS scores appear in terminal output, JSON reports, and SARIF results.
+
+## Score Calibration Pipeline
+
+The full scoring pipeline applies these steps in order:
+
+1. **Raw findings** — Rules produce initial finding set
+2. **Deduplication** — Exact line, cross-rule, function scope, prompt cap
+3. **Suppression** — `g0-ignore` inline comments
+4. **Compensating controls** — ±5 line proximity check downgrades severity
+5. **Control registry** — Project-wide security control detection adjusts confidence/severity
+6. **Test file handling** — Downgrade or filter findings in test/fixture files
+7. **Reachability tagging** — Categorize code accessibility
+8. **Exploitability assessment** — AST-based taint analysis
+9. **Score calculation** — Apply formula with multipliers
+10. **Grade assignment** — Map score to letter grade
