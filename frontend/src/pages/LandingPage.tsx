@@ -8,7 +8,7 @@ import {
   Shield, GitBranch, Zap, Bot, ArrowRight, Loader2, UploadCloud, Activity, Wrench,
   CheckCircle2, AlertTriangle, Terminal, Layers, GitPullRequest, Sparkles, Copy, 
   Check, BarChart3, Binary, Lock, Network, Database, Eye, ChevronRight,
-  ShieldCheck, FileCode, Cpu, Info
+  ShieldCheck, FileCode, Cpu, Info, ExternalLink
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -344,6 +344,22 @@ export default function LandingPage() {
                   {!isLoggingIn && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
                 </button>
               </div>
+
+              {/* Idea Report Card */}
+              <a 
+                href="https://drive.google.com/file/d/1FIDzQ4OGU6Vs0bct49cXAKitNhhJXZ5z/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-sky-50 border border-sky-100 hover:border-sky-300 transition-all group shadow-sm hover:shadow-md cursor-pointer w-fit"
+              >
+                <div className="w-10 h-10 rounded-xl bg-sky-600 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
+                  <ExternalLink className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-sky-700 transition-colors">Our Entire Idea Report</h4>
+                  <p className="text-xs text-slate-600 mt-0.5">View the complete hackathon solution PDF</p>
+                </div>
+              </a>
             </div>
 
             {/* Right Column - Animated Dark Terminal Card */}
