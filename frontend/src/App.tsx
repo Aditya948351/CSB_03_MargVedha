@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import { useAppStore } from './store';
 import Layout from './components/layout/Layout';
+import ScrollObserver from './components/layout/ScrollObserver';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -30,6 +31,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollObserver />
       <Routes>
         {/* Public Homepage & Authentication Screen */}
         <Route path="/" element={<LandingPage />} />

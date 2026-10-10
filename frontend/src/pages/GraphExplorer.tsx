@@ -21,25 +21,35 @@ export default function GraphExplorer() {
     
     const nodes = (graph.nodes || []).map((n: any) => {
       const data = n.data || n;
-      let color = '#3b82f6'; // default primary
-      let shape = 'round-rectangle';
+      let color = '#6366f1'; // Indigo for default/clean
+      let shadowColor = '#818cf8';
+      let shape = 'hexagon';
+      let size = 36;
       
       const rawType = (data.type || '').toLowerCase();
       if (rawType === 'project') {
-        color = '#10b981'; // success (Green Diamond)
+        color = '#10b981'; // Green for root project
+        shadowColor = '#34d399';
         shape = 'diamond';
+        size = 44;
       } else if (rawType === 'vulnerability') {
-        color = '#ef4444'; // danger (Red Triangle)
+        color = '#ef4444'; // Red for Vulnerability
+        shadowColor = '#f87171';
         shape = 'triangle';
+        size = 40;
       } else if (rawType.includes('package')) {
-        // Check if package is vulnerable
         const rawLabel = data.label || data.name || data.id || '';
         const pkgName = rawLabel.split('@')[0].replace(/^pkg:(npm|pypi)\//, '');
         const isVulnerable = (findings || []).some((f: any) => f.package === pkgName || (data.id && data.id.includes(f.package)));
         if (isVulnerable) {
-          color = '#f59e0b'; // warning (Amber Rectangle)
+          color = '#f59e0b'; // Amber for vulnerable package
+          shadowColor = '#fbbf24';
+          shape = 'round-rectangle';
+          size = 40;
         } else {
-          color = '#3b82f6'; // primary (Blue Rectangle)
+          color = '#6366f1'; // Indigo for clean package
+          shadowColor = '#818cf8';
+          shape = 'ellipse';
         }
       }
 
@@ -53,6 +63,9 @@ export default function GraphExplorer() {
         style: {
           'background-color': color,
           'shape': shape,
+          'shadow-color': shadowColor,
+          'width': size,
+          'height': size,
         }
       };
     });
@@ -69,8 +82,10 @@ export default function GraphExplorer() {
           type: data.type
         },
         style: {
-          'line-color': isVuln ? '#ef4444' : '#94a3b8',
-          'target-arrow-color': isVuln ? '#ef4444' : '#94a3b8',
+          'line-color': isVuln ? '#ef4444' : '#cbd5e1',
+          'target-arrow-color': isVuln ? '#ef4444' : '#cbd5e1',
+          'line-style': isVuln ? 'dashed' : 'solid',
+          'width': isVuln ? 3 : 2,
         }
       };
     });
@@ -83,28 +98,47 @@ export default function GraphExplorer() {
       selector: 'node',
       style: {
         'label': 'data(label)',
-        'color': '#0f172a',
-        'font-size': '11px',
-        'font-weight': '600',
+        'color': '#1e293b',
+        'font-family': 'Inter, sans-serif',
+        'font-size': '12px',
+        'font-weight': '700',
         'text-valign': 'bottom',
-        'text-margin-y': '6px',
+        'text-margin-y': '8px',
         'background-color': 'data(style.background-color)',
         'shape': 'data(style.shape)',
-        'width': 28,
-        'height': 28,
-        'border-width': 2,
+        'width': 'data(style.width)',
+        'height': 'data(style.height)',
+        'border-width': 3,
         'border-color': '#ffffff',
+        'shadow-blur': 20,
+        'shadow-color': 'data(style.shadow-color)',
+        'shadow-opacity': 0.6,
+        'shadow-offset-y': 4,
+        'transition-property': 'background-color, shadow-blur, shadow-opacity',
+        'transition-duration': '300ms'
       }
     },
     {
       selector: 'edge',
       style: {
-        'width': 2,
+        'width': 'data(style.width)',
         'line-color': 'data(style.line-color)',
         'target-arrow-color': 'data(style.target-arrow-color)',
-        'target-arrow-shape': 'triangle',
+        'line-style': 'data(style.line-style)',
+        'target-arrow-shape': 'chevron',
         'curve-style': 'bezier',
-        'opacity': 0.7
+        'opacity': 0.75,
+        'transition-property': 'line-color, target-arrow-color',
+        'transition-duration': '300ms'
+      }
+    },
+    {
+      selector: 'node:selected',
+      style: {
+        'border-color': '#0f172a',
+        'border-width': 4,
+        'shadow-blur': 30,
+        'shadow-opacity': 0.9,
       }
     }
   ];
@@ -265,31 +299,32 @@ export default function GraphExplorer() {
         /* INTERACTIVE CYTOSCAPE GRAPH (When nodes are present)                      */
         /* ========================================================================= */
         <div className="flex flex-1 gap-4 overflow-hidden relative min-h-[500px]">
-          <div className="flex-1 bg-white border border-slate-200 rounded-2xl relative overflow-hidden shadow-sm">
+          <div className="flex-1 bg-slate-50 relative overflow-hidden shadow-inner bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] rounded-2xl border border-slate-200">
             {/* Floating Legend Panel */}
-            <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md p-4 rounded-xl border border-slate-200 shadow-lg text-xs space-y-2 pointer-events-auto">
-              <div className="font-bold text-slate-900 uppercase tracking-wider text-[10px] mb-2 border-b border-slate-100 pb-1.5 flex items-center gap-1.5">
+            <div className="absolute top-4 left-4 z-20 bg-white/80 backdrop-blur-xl p-4 rounded-xl border border-white shadow-xl shadow-slate-200/50 text-xs space-y-2.5 pointer-events-auto transition-all hover:bg-white/95">
+              <div className="font-bold text-slate-900 uppercase tracking-wider text-[10px] mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
+                <Sparkles className="size-3.5 text-indigo-500" />
                 <span>Graph Legend & Meaning</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <span className="w-3.5 h-3.5 rotate-45 bg-emerald-500 rounded-[2px] inline-block shadow-sm"></span>
-                <span><strong>Diamond (Green):</strong> Root Project</span>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <span className="w-4 h-4 rotate-45 bg-emerald-500 rounded-[3px] inline-block shadow-[0_2px_10px_rgba(16,185,129,0.4)]"></span>
+                <span>Root Project</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <span className="w-3.5 h-3.5 bg-blue-500 rounded-sm inline-block shadow-sm"></span>
-                <span><strong>Rectangle (Blue):</strong> Clean Package</span>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <span className="w-4 h-4 bg-indigo-500 rounded-full inline-block shadow-[0_2px_10px_rgba(99,102,241,0.4)]"></span>
+                <span>Clean Package</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <span className="w-3.5 h-3.5 bg-amber-500 rounded-sm inline-block shadow-sm"></span>
-                <span><strong>Rectangle (Amber):</strong> Vulnerable Package</span>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <span className="w-4 h-4 bg-amber-500 rounded-[4px] inline-block shadow-[0_2px_10px_rgba(245,158,11,0.4)]"></span>
+                <span>Vulnerable Package</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-700">
-                <span className="w-3.5 h-3.5 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[12px] border-b-red-500 inline-block"></span>
-                <span><strong>Triangle (Red):</strong> Active CVE / Threat</span>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <span className="w-4 h-4 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-red-500 inline-block drop-shadow-[0_4px_8px_rgba(239,68,68,0.5)]"></span>
+                <span>Active CVE / Threat</span>
               </div>
-              <div className="pt-1.5 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
-                <span className="w-4 h-0.5 bg-red-500 inline-block"></span>
-                <span>Red Edge = Threat Flow</span>
+              <div className="pt-2 mt-2 border-t border-slate-200 flex items-center gap-3 text-[11px] text-slate-500 font-medium">
+                <span className="w-5 h-0.5 bg-red-500 inline-block border-b-2 border-red-500 border-dashed"></span>
+                <span>Threat Flow Pattern</span>
               </div>
             </div>
 
@@ -300,8 +335,14 @@ export default function GraphExplorer() {
               layout={{ 
                 name: 'cose', 
                 padding: 60,
-                nodeRepulsion: 500000,
-                idealEdgeLength: 120
+                nodeRepulsion: 1500000,
+                idealEdgeLength: 150,
+                edgeElasticity: 200,
+                gravity: 0.2,
+                numIter: 1500,
+                animate: true,
+                animationDuration: 800,
+                randomize: true
               }}
               cy={(cy) => {
                 cy.on('tap', 'node', (evt) => {

@@ -33,14 +33,6 @@ export const saveScanResult = async (scanData: any, userId: string = 'anonymous'
       high_count: scanData.findings.filter((f: any) => f.severity >= 7.0 && f.severity < 9.0).length,
     });
 
-    // Also persist the user's active scan state for session persistence
-    if (userId && userId !== 'anonymous') {
-      await setDoc(doc(db, "users", userId, "state", "activeScan"), {
-        scanData,
-        updated_at: new Date().toISOString()
-      });
-    }
-
     return docRef.id;
   } catch (error) {
     console.error("Error saving scan result to Firebase:", error);

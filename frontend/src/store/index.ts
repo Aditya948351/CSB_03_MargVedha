@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { demoScanResult } from '../fixtures/demoData';
 
 export type UserPlan = 'free' | 'pro' | 'fleet';
@@ -120,113 +121,126 @@ interface AppState {
   hasAccessToFeature: (featureLevel: 'free' | 'pro' | 'fleet') => boolean;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  scanResult: EMPTY_SCAN_RESULT,
-  setScanResult: (result) => set({ scanResult: result, isDemoMode: false }),
-  isDemoMode: false,
-  setIsDemoMode: (isDemo) => set({ isDemoMode: isDemo }),
-  loadDemoWorkspace: () => set({ scanResult: demoScanResult, isDemoMode: true }),
-  clearDemoWorkspace: () => set({ scanResult: EMPTY_SCAN_RESULT, isDemoMode: false }),
-  githubUser: null,
-  setGithubUser: (gh) => set({ githubUser: gh }),
-  liveScanningEnabled: true,
-  setLiveScanningEnabled: (enabled) => set({ liveScanningEnabled: enabled }),
-  user: null,
-  authLoading: true,
-  setAuthLoading: (loading) => set({ authLoading: loading }),
-  setUser: (user) => {
-    const isOwner = user?.email === 'ap8548328@gmail.com';
-    set({ 
-      user,
-      authLoading: false,
-      userPlan: isOwner ? 'fleet' : (get().userPlan || 'free'),
-      // If superuser, load enterprise repos; if other user, only keep their explicitly added repos
-      userRepos: isOwner ? ENTERPRISE_DEFAULT_REPOS : (get().userRepos.length > 0 && !get().userRepos[0].fullName.startsWith('Aditya948351/') ? get().userRepos : []),
-      scanResult: isOwner ? demoScanResult : (get().scanResult?.projects?.length > 0 && !get().isDemoMode ? get().scanResult : EMPTY_SCAN_RESULT),
-      isDemoMode: isOwner ? true : false,
-      githubUser: user ? get().githubUser : null
-    });
-  },
-  scanCount: 0,
-  setScanCount: (count) => set({ scanCount: count }),
-  userPlan: 'free',
-  setUserPlan: (plan) => set({ userPlan: plan }),
-  userRepos: [],
-  setUserRepos: (repos) => set({ userRepos: repos }),
-  addUserRepo: (repoFullName, ecosystem = 'polyglot') => {
-    const cleanName = repoFullName.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
-    if (!cleanName || !cleanName.includes('/')) {
-      return { success: false, message: 'Invalid repository format. Please use "owner/repository" or GitHub URL.' };
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      scanResult: EMPTY_SCAN_RESULT,
+      setScanResult: (result) => set({ scanResult: result, isDemoMode: false }),
+      isDemoMode: false,
+      setIsDemoMode: (isDemo) => set({ isDemoMode: isDemo }),
+      loadDemoWorkspace: () => set({ scanResult: demoScanResult, isDemoMode: true }),
+      clearDemoWorkspace: () => set({ scanResult: EMPTY_SCAN_RESULT, isDemoMode: false }),
+      githubUser: null,
+      setGithubUser: (gh) => set({ githubUser: gh }),
+      liveScanningEnabled: true,
+      setLiveScanningEnabled: (enabled) => set({ liveScanningEnabled: enabled }),
+      user: null,
+      authLoading: true,
+      setAuthLoading: (loading) => set({ authLoading: loading }),
+      setUser: (user) => {
+        const isOwner = user?.email === 'ap8548328@gmail.com';
+        set({ 
+          user,
+          authLoading: false,
+          userPlan: isOwner ? 'fleet' : (get().userPlan || 'free'),
+          userRepos: get().userRepos || [],
+          scanResult: get().scanResult || EMPTY_SCAN_RESULT,
+          isDemoMode: get().isDemoMode,
+          githubUser: user ? get().githubUser : null
+        });
+      },
+      scanCount: 0,
+      setScanCount: (count) => set({ scanCount: count }),
+      userPlan: 'free',
+      setUserPlan: (plan) => set({ userPlan: plan }),
+      userRepos: [],
+      setUserRepos: (repos) => set({ userRepos: repos }),
+      addUserRepo: (repoFullName, ecosystem = 'polyglot') => {
+        const cleanName = repoFullName.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
+        if (!cleanName || !cleanName.includes('/')) {
+          return { success: false, message: 'Invalid repository format. Please use "owner/repository" or GitHub URL.' };
+        }
+
+        const { user, userPlan, userRepos } = get();
+        const isOwner = user?.email === 'ap8548328@gmail.com';
+        const limit = isOwner || userPlan === 'fleet' ? 9999 : (userPlan === 'pro' ? 10 : 1);
+
+        if (userRepos.length >= limit) {
+          return { 
+            success: false, 
+            message: `Plan limit reached (${limit} repo maximum on ${userPlan.toUpperCase()} tier). Upgrade to add more repositories.` 
+          };
+        }
+
+        if (userRepos.some(r => r.fullName.toLowerCase() === cleanName.toLowerCase())) {
+          return { success: false, message: 'Repository is already added to your monitored sources.' };
+        }
+
+        const shortName = cleanName.split('/')[1] || cleanName;
+        const newRepo: UserRepo = {
+          id: `repo-${Date.now()}`,
+          name: shortName,
+          fullName: cleanName,
+          status: 'Monitored',
+          monitoringActive: true,
+          openIncidents: 0,
+          criticals: 0,
+          honeytoken: '-',
+          agenticStatus: 'Standard Scan',
+          lastScan: 'Just now',
+          duration: '1s',
+          defaultBranch: 'main',
+          ecosystem: ecosystem
+        };
+
+        set({ userRepos: [newRepo, ...userRepos] });
+        return { success: true, message: `Successfully added ${cleanName} to your monitored sources.` };
+      },
+      removeUserRepo: (repoId) => {
+        set(state => ({ userRepos: state.userRepos.filter(r => r.id !== repoId) }));
+      },
+      toggleRepoMonitoring: (repoId) => {
+        set(state => ({
+          userRepos: state.userRepos.map(r => r.id === repoId ? {
+            ...r,
+            monitoringActive: !r.monitoringActive,
+            status: !r.monitoringActive ? 'Monitored' : 'Unreachable'
+          } : r)
+        }));
+      },
+      toggleAllRepoMonitoring: () => {
+        const repos = get().userRepos;
+        const anyActive = repos.some(r => r.monitoringActive);
+        set({
+          userRepos: repos.map(r => ({
+            ...r,
+            monitoringActive: !anyActive,
+            status: !anyActive ? 'Monitored' : 'Unreachable'
+          }))
+        });
+      },
+      isSuperAdmin: () => {
+        const user = get().user;
+        return user?.email === 'ap8548328@gmail.com';
+      },
+      hasAccessToFeature: (featureLevel) => {
+        const { user, userPlan } = get();
+        if (user?.email === 'ap8548328@gmail.com') return true;
+        if (userPlan === 'fleet') return true;
+        if (userPlan === 'pro' && (featureLevel === 'pro' || featureLevel === 'free')) return true;
+        return featureLevel === 'free';
+      }
+    }),
+    {
+      name: 'margvedha-storage',
+      partialize: (state) => ({ 
+        githubUser: state.githubUser, 
+        userRepos: state.userRepos,
+        userPlan: state.userPlan,
+        scanCount: state.scanCount,
+        liveScanningEnabled: state.liveScanningEnabled
+      }),
     }
-
-    const { user, userPlan, userRepos } = get();
-    const isOwner = user?.email === 'ap8548328@gmail.com';
-    const limit = isOwner || userPlan === 'fleet' ? 9999 : (userPlan === 'pro' ? 10 : 1);
-
-    if (userRepos.length >= limit) {
-      return { 
-        success: false, 
-        message: `Plan limit reached (${limit} repo maximum on ${userPlan.toUpperCase()} tier). Upgrade to add more repositories.` 
-      };
-    }
-
-    if (userRepos.some(r => r.fullName.toLowerCase() === cleanName.toLowerCase())) {
-      return { success: false, message: 'Repository is already added to your monitored sources.' };
-    }
-
-    const shortName = cleanName.split('/')[1] || cleanName;
-    const newRepo: UserRepo = {
-      id: `repo-${Date.now()}`,
-      name: shortName,
-      fullName: cleanName,
-      status: 'Monitored',
-      monitoringActive: true,
-      openIncidents: 0,
-      criticals: 0,
-      honeytoken: '-',
-      agenticStatus: 'Standard Scan',
-      lastScan: 'Just now',
-      duration: '1s',
-      defaultBranch: 'main',
-      ecosystem: ecosystem
-    };
-
-    set({ userRepos: [newRepo, ...userRepos] });
-    return { success: true, message: `Successfully added ${cleanName} to your monitored sources.` };
-  },
-  removeUserRepo: (repoId) => {
-    set(state => ({ userRepos: state.userRepos.filter(r => r.id !== repoId) }));
-  },
-  toggleRepoMonitoring: (repoId) => {
-    set(state => ({
-      userRepos: state.userRepos.map(r => r.id === repoId ? {
-        ...r,
-        monitoringActive: !r.monitoringActive,
-        status: !r.monitoringActive ? 'Monitored' : 'Unreachable'
-      } : r)
-    }));
-  },
-  toggleAllRepoMonitoring: () => {
-    const repos = get().userRepos;
-    const anyActive = repos.some(r => r.monitoringActive);
-    set({
-      userRepos: repos.map(r => ({
-        ...r,
-        monitoringActive: !anyActive,
-        status: !anyActive ? 'Monitored' : 'Unreachable'
-      }))
-    });
-  },
-  isSuperAdmin: () => {
-    const user = get().user;
-    return user?.email === 'ap8548328@gmail.com';
-  },
-  hasAccessToFeature: (featureLevel) => {
-    const { user, userPlan } = get();
-    if (user?.email === 'ap8548328@gmail.com') return true;
-    if (userPlan === 'fleet') return true;
-    if (userPlan === 'pro' && (featureLevel === 'pro' || featureLevel === 'free')) return true;
-    return featureLevel === 'free';
-  }
-}));
+  )
+);
 

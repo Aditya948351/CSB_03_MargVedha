@@ -186,6 +186,31 @@ def analyze_website(url: str):
     return {"website_client": deps}
 
 
+MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25MB upload limit (DoS mitigation)
+MAX_UNCOMPRESSED_FILE_SIZE = 50 * 1024 * 1024  # 50MB per member (Decompression bomb mitigation)
+
+def safe_extract_zip(zip_file: zipfile.ZipFile, target_dir: str):
+    """
+    Mitigates Zip Slip (CWE-22) and Zip Bomb (CWE-409) attacks.
+    Ensures every extracted file path is strictly contained within target_dir.
+    """
+    target_dir_abs = os.path.abspath(target_dir)
+    for member in zip_file.infolist():
+        # Prevent Zip Bomb
+        if member.file_size > MAX_UNCOMPRESSED_FILE_SIZE:
+            raise HTTPException(status_code=400, detail=f"Decompression bomb rejected: {member.filename} exceeds 50MB.")
+        
+        # Prevent Zip Slip path traversal
+        dest_path = os.path.abspath(os.path.join(target_dir_abs, member.filename))
+        if not (dest_path == target_dir_abs or dest_path.startswith(target_dir_abs + os.sep)):
+            raise HTTPException(status_code=400, detail=f"Zip Slip attack detected in member: {member.filename}")
+        
+        # Safe extraction without following external symlinks
+        if not member.is_dir():
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            with zip_file.open(member) as src, open(dest_path, "wb") as dst:
+                dst.write(src.read())
+
 @app.post("/api/v1/analyze", response_model=ScanResult)
 async def analyze_project(
     file: Optional[UploadFile] = File(None),
@@ -217,12 +242,21 @@ async def analyze_project(
             if github_url:
                 zip_path = fetch_github_zip(github_url, temp_dir)
             else:
+                # 1. Enforce DoS File Size Limit (25MB)
+                contents = await file.read()
+                if len(contents) > MAX_UPLOAD_SIZE:
+                    raise HTTPException(status_code=413, detail="Payload Too Large: Maximum allowed upload is 25MB.")
+                
+                # 2. Format validation
+                if not (contents.startswith(b"PK\x03\x04") or (file.filename and file.filename.endswith(('.zip', '.json', '.txt')))):
+                    raise HTTPException(status_code=400, detail="Invalid file format: Only valid archives or manifests are accepted.")
+                
                 zip_path = os.path.join(temp_dir, "upload.zip")
                 with open(zip_path, "wb") as f:
-                    f.write(await file.read())
+                    f.write(contents)
             
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(extracted_dir)
+                safe_extract_zip(zip_ref, extracted_dir)
             
             # Find manifest files
             for root, dirs, files in os.walk(extracted_dir):

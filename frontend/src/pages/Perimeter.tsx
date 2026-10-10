@@ -23,32 +23,7 @@ interface SecretIncident {
   cveMatch: string;
 }
 
-const SAMPLE_INCIDENTS: SecretIncident[] = [
-  {
-    id: 'inc-1',
-    occurredDate: '2 mins ago',
-    validity: 'Valid',
-    type: 'Hardcoded Production Secret (AWS_ACCESS_KEY)',
-    severity: 'Critical',
-    filePath: 'config/production.json:L14',
-    repo: 'Active Monitored Repository',
-    author: 'CI/CD Pipeline',
-    status: 'Active Vector',
-    cveMatch: 'Potential unauthorized cloud infra takeover. Honeytoken trigger armed.'
-  },
-  {
-    id: 'inc-2',
-    occurredDate: '10 mins ago',
-    validity: 'Valid',
-    type: 'Transitive CVE-2021-23337 (lodash@4.17.19)',
-    severity: 'Critical',
-    filePath: 'package-lock.json -> express -> body-parser',
-    repo: 'Active Monitored Repository',
-    author: 'Transitive Dependency Graph',
-    status: 'Active Vector',
-    cveMatch: 'Command Injection via template parsing. Z3 SAT Patch Available: 4.17.21'
-  }
-];
+// Incidents are now dynamically generated inside the component based on actual scan findings
 
 export default function Perimeter() {
   const { 
@@ -60,8 +35,56 @@ export default function Perimeter() {
     removeUserRepo, 
     toggleRepoMonitoring, 
     toggleAllRepoMonitoring, 
-    setScanResult 
+    setScanResult,
+    scanResult
   } = useAppStore();
+
+  const findings = scanResult?.findings || [];
+  
+  const secretFindings = findings.filter((f: any) => {
+    const text = (f.title + " " + f.package + " " + f.summary + " " + f.vulnerability_id).toLowerCase();
+    return text.includes('secret') || text.includes('key') || text.includes('token') || text.includes('credential') || text.includes('honeytoken') || text.includes('password') || text.includes('leak');
+  });
+  
+  const dynamicIncidents: SecretIncident[] = secretFindings.map((f: any, idx: number) => ({
+    id: `inc-${idx}`,
+    occurredDate: 'Just now',
+    validity: 'Valid',
+    type: `${f.severity || 'High'} Vulnerability: ${f.package || f.title || 'Unknown'}`,
+    severity: f.severity === 'CRITICAL' ? 'Critical' : f.severity === 'HIGH' ? 'High' : 'Medium',
+    filePath: f.package || 'Unknown file',
+    repo: userRepos.length > 0 ? (userRepos[idx % userRepos.length]?.name || 'Monitored Repository') : 'Monitored Repository',
+    author: 'MARGVEDHA Scanner',
+    status: 'Active Vector',
+    cveMatch: f.title || f.summary || 'Requires immediate revocation.'
+  }));
+
+  const activeIncidentsCount = dynamicIncidents.length;
+
+  // Calculate dynamic Guard0 AI Security Grade based on real live data
+  const calculateDynamicScore = () => {
+    if (userRepos.length === 0) return 0;
+    let score = 100;
+    // Deduct for active vulnerabilities
+    score -= activeIncidentsCount * 12;
+    // Deduct for unmonitored repositories
+    const unmonitoredCount = userRepos.filter(r => !r.monitoringActive).length;
+    score -= unmonitoredCount * 8;
+    return Math.max(0, Math.min(100, score));
+  };
+
+  const dynamicScore = calculateDynamicScore();
+  const getGrade = (score: number) => {
+    if (score === 0 && userRepos.length === 0) return 'N/A';
+    if (score >= 95) return 'A+';
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B+';
+    if (score >= 70) return 'B';
+    if (score >= 60) return 'C';
+    if (score >= 40) return 'D';
+    return 'F';
+  };
+  const dynamicGrade = getGrade(dynamicScore);
 
   const isSuperUser = user?.email === 'ap8548328@gmail.com';
   const hasFleetAccess = isSuperUser || userPlan === 'fleet';
@@ -128,9 +151,17 @@ export default function Perimeter() {
     }, 1400);
   };
 
+  const getRealIncidentsForRepo = (repo: UserRepo) => {
+    if (!findings || findings.length === 0) return 0;
+    return findings.filter((f: any) => 
+      f.affected_projects?.some((p: string) => p.includes(repo.name)) || 
+      f.paths?.some((path: any[]) => path.some((node: string) => node.includes(repo.name)))
+    ).length;
+  };
+
   const filteredRepos = userRepos.filter(repo => {
     if (filterPill === 'critical') return repo.criticals > 0;
-    if (filterPill === 'incidents') return repo.openIncidents > 0;
+    if (filterPill === 'incidents') return getRealIncidentsForRepo(repo) > 0;
     if (searchQuery) return repo.fullName.toLowerCase().includes(searchQuery.toLowerCase());
     return true;
   });
@@ -301,7 +332,7 @@ jobs:
           <ShieldAlert className="w-4 h-4 text-red-500" />
           Internal Secret Incidents
           <span className="px-1.5 py-0.2 rounded-full bg-red-100 text-red-700 text-[11px] font-mono font-bold">
-            {hasProAccess ? '2 Active' : '🔒 Pro'}
+            {hasProAccess ? `${activeIncidentsCount} Active` : '🔒 Pro'}
           </span>
         </button>
 
@@ -399,7 +430,7 @@ jobs:
               Guard0 AI Governance
             </span>
             <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-mono font-bold">
-              {hasFleetAccess ? 'Grade B+' : 'Enterprise'}
+              {hasFleetAccess ? `Grade ${dynamicGrade}` : 'Enterprise'}
             </span>
           </div>
           <div className="flex items-baseline gap-2">
@@ -558,10 +589,10 @@ jobs:
                         </td>
 
                         <td className="py-4 px-4">
-                          {repo.openIncidents > 0 ? (
+                          {getRealIncidentsForRepo(repo) > 0 ? (
                             <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 text-xs font-mono font-bold flex items-center gap-1 w-fit">
                               <ShieldAlert className="w-3.5 h-3.5" />
-                              {repo.openIncidents} open
+                              {getRealIncidentsForRepo(repo)} open
                             </span>
                           ) : (
                             <span className="text-xs text-emerald-600 font-mono flex items-center gap-1">
@@ -680,12 +711,19 @@ jobs:
                   Active Monitored Sources
                 </span>
                 <span>•</span>
-                <span className="text-slate-700">2 active security vectors detected</span>
+                <span className="text-slate-700">{activeIncidentsCount} active security vectors detected</span>
               </div>
             </div>
 
-            <div className="divide-y divide-slate-100">
-              {SAMPLE_INCIDENTS.map((inc) => (
+            {activeIncidentsCount === 0 ? (
+              <div className="p-12 text-center text-slate-500">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3 opacity-50" />
+                <h3 className="text-lg font-bold text-slate-700">No active incidents detected</h3>
+                <p className="text-sm mt-1">Your monitored repositories are clean based on the latest scan.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {dynamicIncidents.map((inc) => (
                 <div key={inc.id} className="p-6 hover:bg-slate-50 transition-colors space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -727,6 +765,7 @@ jobs:
                 </div>
               ))}
             </div>
+            )}
           </div>
         </div>
       )}
@@ -778,9 +817,9 @@ jobs:
               <div className="flex flex-col items-center justify-center p-6 bg-white/10 border border-white/20 rounded-xl min-w-[190px] text-center shadow-lg">
                 <span className="text-xs font-mono text-purple-200 mb-1">AI Security Grade</span>
                 <span className="text-5xl font-extrabold text-white">
-                  B+
+                  {dynamicGrade}
                 </span>
-                <span className="text-xs text-purple-200 mt-1 font-mono">Score: 86 / 100</span>
+                <span className="text-xs text-purple-200 mt-1 font-mono">Score: {dynamicScore} / 100</span>
               </div>
             </div>
           </div>

@@ -272,7 +272,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section Container (snug spacing below navbar, matching user screenshot) */}
-      <section className="relative pt-24 pb-8 md:pt-28 md:pb-10 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section className="reveal relative pt-24 pb-8 md:pt-28 md:pb-10 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="relative overflow-hidden rounded-[2.25rem] bg-white border border-slate-200/90 shadow-xl shadow-slate-200/40 p-8 sm:p-12 lg:p-16">
           
           {/* Animated Curved Teal / Cyan Contour Waves (as seen in screenshot) */}
@@ -409,7 +409,7 @@ export default function LandingPage() {
         {/* ========================================================================= */}
         {/* DEEP ANALYSIS & INNOVATION SUITE (Interactive Attack & Graph Sandbox) */}
         {/* ========================================================================= */}
-        <section id="threat-sandbox" className="pt-8">
+        <section id="threat-sandbox" className="reveal pt-8">
           <div className="bg-gradient-to-b from-slate-50 to-white rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-10 relative overflow-hidden">
             
             {/* Header Title with Innovation Badges */}
@@ -920,7 +920,7 @@ export default function LandingPage() {
         {/* ========================================================================= */}
         {/* THEORETICAL FOUNDATION & MATHEMATICAL PROOFS */}
         {/* ========================================================================= */}
-        <section id="theory" className="pt-6">
+        <section id="theory" className="reveal pt-6">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-xs border border-blue-200 mb-3">
               THEORETICAL RIGOR & GRAPH FORMULATIONS
@@ -991,7 +991,7 @@ export default function LandingPage() {
         {/* ========================================================================= */}
         {/* HOW MARGVEDHA WORKS (3-Step Pipeline) */}
         {/* ========================================================================= */}
-        <div id="how-it-works" className="mt-16 mb-16 pt-8">
+        <div id="how-it-works" className="reveal mt-16 mb-16 pt-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">How MARGVEDHA Works</h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">From an uploaded repository to a merged GitHub patch in 3 simple steps.</p>
@@ -1120,7 +1120,7 @@ export default function LandingPage() {
         </div>
 
         {/* Features Grid */}
-        <div id="features" className="grid md:grid-cols-3 gap-8 pt-16">
+        <div id="features" className="reveal grid md:grid-cols-3 gap-8 pt-16">
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:border-primary/20 transition-colors">
             <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 text-primary">
               <GitBranch className="w-7 h-7" />
@@ -1180,7 +1180,7 @@ export default function LandingPage() {
         {/* ========================================================================= */}
         {/* COMPREHENSIVE COMPETITIVE BENCHMARK MATRIX */}
         {/* ========================================================================= */}
-        <div id="competitors" className="mt-32 pt-16 border-t border-slate-200">
+        <div id="competitors" className="reveal mt-32 pt-16 border-t border-slate-200">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-700 font-bold tracking-wide text-xs mb-4">
               COMPETITIVE ARCHITECTURAL BENCHMARK
@@ -1307,7 +1307,7 @@ export default function LandingPage() {
         </div>
 
         {/* 2. Five attacks you should understand - How MARGVEDHA Defends Itself */}
-        <div id="security-defense" className="mt-32">
+        <div id="security-defense" className="reveal mt-32">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold mb-3 shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -1450,7 +1450,7 @@ export default function LandingPage() {
         </div>
 
         {/* Pricing Notice */}
-        <div id="pricing" className="mt-32 mb-16">
+        <div id="pricing" className="reveal mt-32 mb-16">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold mb-3 shadow-xs">
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
